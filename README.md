@@ -2,10 +2,9 @@
 
 ## Requirements
 
-- Install [Golang](https://go.dev/doc/install)
 - Install [Docker](https://docs.docker.com/engine/install/)
   - Remember to [add Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user) when using Linux
-- Install [Docker compose](https://docs.docker.com/compose/install/linux/) (No need for Windows and Mac)
+- Install [Docker compose](https://docs.docker.com/compose/install/linux/) when using Linux
 
 ## Run on locally
 
