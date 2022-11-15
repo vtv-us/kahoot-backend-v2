@@ -20,7 +20,7 @@ func main() {
 
 	fmt.Println(c)
 
-	conn, err := sql.Open(c.DB_DRIVER, c.DB_SOURCE)
+	conn, err := sql.Open(c.DBDriver, c.DBUrl)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
@@ -29,7 +29,7 @@ func main() {
 	server := services.NewServer(store, &c)
 	route := routes.InitRoutes(server)
 
-	err = route.Run(c.SERVER_ADDRESS)
+	err = route.Run(c.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}

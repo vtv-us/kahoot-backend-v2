@@ -3,13 +3,12 @@ package utils
 import "github.com/spf13/viper"
 
 type Config struct {
-	DB_DRIVER string `mapstructure:"DB_DRIVER"`
-
-	DB_SOURCE string `mapstructure:"DB_SOURCE"`
-
-	SERVER_ADDRESS string `mapstructure:"SERVER_ADDRESS"`
-
-	JWT_SECRET_KET string `mapstructure:"JWT_SECRET_KEY"`
+	DBDriver                string `mapstructure:"DB_DRIVER"`
+	DBUrl                   string `mapstructure:"DB_SOURCE"`
+	ServerAddress           string `mapstructure:"SERVER_ADDRESS"`
+	JwtSecretKey            string `mapstructure:"JWT_SECRET_KEY"`
+	AccessTokenExpiredTime  int32  `mapstructure:"ACCESS_TOKEN_EXPIRED_TIME"`
+	RefreshTokenExpiredTime int32  `mapstructure:"REFRESH_TOKEN_EXPIRED_TIME"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

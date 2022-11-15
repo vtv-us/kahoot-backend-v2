@@ -1,52 +1,47 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/vtv-us/kahoot-backend/token"
+	"github.com/vtv-us/kahoot-backend/internal/utils"
 )
 
-const (
-	authorizationHeaderKey  = "Authorization"
-	authorizationTypeBearer = "bearer"
-	authorizationPayloadKey = "authorization_payload"
-)
+type AuthMiddlewareConfig struct {
+	auth *AuthService
+}
 
-func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
-		if authorizationHeader == "" {
-			err := errors.New("authorization header is required")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
-		}
+func InitAuthMiddleware(svc *AuthService) AuthMiddlewareConfig {
+	return AuthMiddlewareConfig{svc}
+}
 
-		fields := strings.Fields(authorizationHeader)
-		if len(fields) < 2 {
-			err := errors.New("authorization header is invalid")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
-		}
+func (c *AuthMiddlewareConfig) AuthRequired(ctx *gin.Context) {
+	authorization := ctx.Request.Header.Get("authorization")
 
-		authorizationType := strings.ToLower(fields[0])
-		if authorizationType != authorizationTypeBearer {
-			err := fmt.Errorf("unsupported authorization type %s", authorizationType)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
-		}
-
-		accessToken := fields[1]
-		payload, err := tokenMaker.VerifyToken(accessToken)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
-		}
-
-		ctx.Set(authorizationPayloadKey, payload)
-		ctx.Next()
+	if authorization == "" {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
+
+	token := strings.Split(authorization, "Bearer ")
+
+	if len(token) < 2 {
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(fmt.Errorf("invalid authorization header")))
+		return
+	}
+
+	res, err := c.auth.JWT.ValidateToken(token[1])
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
+
+	fmt.Println(res.Email)
+
+	ctx.Set("user_id", res.UserID)
+	ctx.Set("email", res.Email)
+
+	ctx.Next()
 }

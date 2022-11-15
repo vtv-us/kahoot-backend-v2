@@ -19,7 +19,7 @@ type jwtClaims struct {
 	Email  string
 }
 
-func (w *JwtWrapper) GenerateToken(user entities.User, expirationHours int64) (signedToken string, err error) {
+func (w *JwtWrapper) GenerateToken(user entities.User, expirationHours int32) (signedToken string, err error) {
 	expiredAt := time.Now().Local().Add(time.Hour * time.Duration(expirationHours)).Unix()
 	claims := &jwtClaims{
 		UserID: user.UserID,
