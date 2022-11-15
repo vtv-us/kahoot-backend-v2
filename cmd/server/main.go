@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	db "github.com/vtv-us/kahoot-backend/internal/repositories"
@@ -30,7 +31,8 @@ func main() {
 	server := services.NewServer(store, &c)
 	route := routes.InitRoutes(server)
 
-	err = route.Run(c.ServerAddress)
+	address := fmt.Sprintf(":%v", c.Port)
+	err = route.Run(address)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}

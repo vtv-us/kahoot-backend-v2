@@ -6,6 +6,7 @@ type Config struct {
 	DBDriver                string `mapstructure:"DB_DRIVER"`
 	DBUrl                   string `mapstructure:"DATABASE_URL"`
 	ServerAddress           string `mapstructure:"SERVER_ADDRESS"`
+	Port                    int    `mapstructure:"PORT"`
 	JwtSecretKey            string `mapstructure:"JWT_SECRET_KEY"`
 	AccessTokenExpiredTime  int32  `mapstructure:"ACCESS_TOKEN_EXPIRED_TIME"`
 	RefreshTokenExpiredTime int32  `mapstructure:"REFRESH_TOKEN_EXPIRED_TIME"`
