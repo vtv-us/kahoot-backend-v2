@@ -2,10 +2,8 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
-	_ "github.com/lib/pq"
 	db "github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/routes"
 	"github.com/vtv-us/kahoot-backend/internal/services"
@@ -18,7 +16,10 @@ func main() {
 		log.Fatal("can't load config", err)
 	}
 
-	fmt.Println(c)
+	err = utils.MigrateDB(c)
+	if err != nil {
+		log.Fatal("can't migrate db", err)
+	}
 
 	conn, err := sql.Open(c.DBDriver, c.DBUrl)
 	if err != nil {
