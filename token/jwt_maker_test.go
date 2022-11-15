@@ -6,7 +6,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/require"
-	"github.com/vtv-us/kahoot-backend/util"
+	util "github.com/vtv-us/kahoot-backend/internal/utils"
 )
 
 func TestJWTMaker(t *testing.T) {

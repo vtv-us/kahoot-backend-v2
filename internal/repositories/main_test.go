@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-	"github.com/vtv-us/kahoot-backend/util"
+	util "github.com/vtv-us/kahoot-backend/internal/utils"
 )
 
 var testQueries *Queries

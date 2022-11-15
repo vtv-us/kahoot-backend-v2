@@ -1,4 +1,4 @@
-package util
+package utils
 
 import (
 	"errors"
@@ -9,9 +9,8 @@ import (
 )
 
 type JwtWrapper struct {
-	SecretKey       string
-	Issuer          string
-	ExpirationHours int64
+	SecretKey string
+	Issuer    string
 }
 
 type jwtClaims struct {
@@ -20,8 +19,8 @@ type jwtClaims struct {
 	Email  string
 }
 
-func (w *JwtWrapper) GenerateToken(user entities.User) (signedToken string, err error) {
-	expiredAt := time.Now().Local().Add(time.Hour * time.Duration(w.ExpirationHours)).Unix()
+func (w *JwtWrapper) GenerateToken(user entities.User, expirationHours int64) (signedToken string, err error) {
+	expiredAt := time.Now().Local().Add(time.Hour * time.Duration(expirationHours)).Unix()
 	claims := &jwtClaims{
 		UserID: user.UserID,
 		Email:  user.Email,
