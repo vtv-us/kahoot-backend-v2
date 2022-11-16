@@ -29,6 +29,8 @@ func main() {
 
 	store := db.NewStore(conn)
 	server := services.NewServer(store, &c)
+
+	routes.InitGoth(&c)
 	route := routes.InitRoutes(server)
 
 	address := fmt.Sprintf(":%v", c.Port)

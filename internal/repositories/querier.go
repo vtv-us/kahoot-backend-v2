@@ -15,6 +15,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error)
+	UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) (User, error)
 	Verify(ctx context.Context, email string) (User, error)
 }
 

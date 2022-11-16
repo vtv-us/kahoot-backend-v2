@@ -16,13 +16,14 @@ type Group struct {
 }
 
 type User struct {
-	UserID    string         `json:"user_id"`
-	Email     string         `json:"email"`
-	Name      string         `json:"name"`
-	Password  string         `json:"password"`
-	Verified  bool           `json:"verified"`
-	CreatedAt time.Time      `json:"created_at"`
-	GoogleID  sql.NullString `json:"google_id"`
+	UserID     string         `json:"user_id"`
+	Email      string         `json:"email"`
+	Name       string         `json:"name"`
+	Password   string         `json:"password"`
+	Verified   bool           `json:"verified"`
+	CreatedAt  time.Time      `json:"created_at"`
+	GoogleID   sql.NullString `json:"google_id"`
+	FacebookID sql.NullString `json:"facebook_id"`
 }
 
 type UserGroup struct {

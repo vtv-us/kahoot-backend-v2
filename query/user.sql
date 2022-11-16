@@ -3,9 +3,12 @@ INSERT INTO "user" (
   user_id,
   email,
   name,
-  password
+  password,
+  verified,
+  google_id,
+  facebook_id
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 
@@ -32,6 +35,12 @@ RETURNING *;
 -- name: Verify :one
 UPDATE "user"
 SET verified = true
+WHERE email = $1
+RETURNING *;
+
+-- name: UpdateSocialID :one
+UPDATE "user"
+SET google_id = $2, facebook_id = $3
 WHERE email = $1
 RETURNING *;
 

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/lib/pq"
+	"github.com/oov/gothic"
 	"github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
 )
@@ -33,11 +34,12 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	UserID   string `json:"user_id"`
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Verified bool   `json:"verified"`
-	GoogleID string `json:"google_id"`
+	UserID     string `json:"user_id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Verified   bool   `json:"verified"`
+	GoogleID   string `json:"google_id"`
+	FacebookID string `json:"facebook_id"`
 }
 
 func (s *AuthService) Register(ctx *gin.Context) {
@@ -72,11 +74,12 @@ func (s *AuthService) Register(ctx *gin.Context) {
 	}
 
 	rsp := registerResponse{
-		UserID:   user.UserID,
-		Email:    user.Email,
-		Name:     user.Name,
-		Verified: user.Verified,
-		GoogleID: user.GoogleID.String,
+		UserID:     user.UserID,
+		Email:      user.Email,
+		Name:       user.Name,
+		Verified:   user.Verified,
+		GoogleID:   user.GoogleID.String,
+		FacebookID: user.FacebookID.String,
 	}
 
 	ctx.JSON(http.StatusOK, rsp)
@@ -161,6 +164,90 @@ func (s *AuthService) Refresh(ctx *gin.Context) {
 
 	rsp := refreshResponse{
 		AccessToken: accessToken,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+func (s *AuthService) LoginProvider(ctx *gin.Context) {
+	err := gothic.BeginAuth(ctx.Param("provider"), ctx.Writer, ctx.Request)
+	if err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+}
+
+type providerResponse struct {
+	AccessToken string `json:"access_token"`
+	UserID      string `json:"user_id"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+}
+
+func (s *AuthService) ProviderCallback(ctx *gin.Context) {
+	gUser, err := gothic.CompleteAuth(ctx.Param("provider"), ctx.Writer, ctx.Request)
+	if err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	// check if user already exist
+	exist := true
+	user, err := s.DB.GetUserByEmail(ctx, gUser.Email)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			exist = false
+		} else {
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+			return
+		}
+	}
+	// if not, create new user
+	if !exist {
+		arg := repositories.CreateUserParams{
+			UserID:   uuid.NewString(),
+			Email:    gUser.Email,
+			Name:     gUser.Name,
+			Password: "",
+			Verified: true,
+		}
+		provider := ctx.Param("provider")
+		if provider == "google" {
+			arg.GoogleID = utils.NullString(gUser.UserID)
+		}
+		if provider == "facebook" {
+			arg.FacebookID = utils.NullString(gUser.UserID)
+		}
+		user, err = s.DB.CreateUser(ctx, arg)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+			return
+		}
+
+		// if yes, update user
+	} else {
+		arg := repositories.UpdateSocialIDParams{
+			Email: user.Email,
+		}
+		provider := ctx.Param("provider")
+		if provider == "google" {
+			arg.GoogleID = utils.NullString(gUser.UserID)
+		}
+		if provider == "facebook" {
+			arg.FacebookID = utils.NullString(gUser.UserID)
+		}
+		user, err = s.DB.UpdateSocialID(ctx, arg)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+			return
+		}
+	}
+
+	rsp := providerResponse{
+		AccessToken: gUser.AccessToken,
+		UserID:      user.UserID,
+		Email:       user.Email,
+		Name:        user.Name,
 	}
 
 	ctx.JSON(http.StatusOK, rsp)

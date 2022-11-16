@@ -5,7 +5,8 @@ CREATE TABLE "user" (
   "password" text NOT NULL,
   "verified" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "google_id" text
+  "google_id" text,
+  "facebook_id" text
 );
 
 CREATE TABLE "group" (
