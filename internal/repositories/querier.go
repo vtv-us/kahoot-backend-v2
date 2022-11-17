@@ -9,11 +9,20 @@ import (
 )
 
 type Querier interface {
+	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
+	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteGroup(ctx context.Context, groupID string) error
 	DeleteUser(ctx context.Context, email string) error
+	GetRoleInGroup(ctx context.Context, arg GetRoleInGroupParams) (string, error)
 	GetUser(ctx context.Context, userID string) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
+	ListGroupCreatedByUser(ctx context.Context, createdBy string) ([]Group, error)
+	ListGroupJoined(ctx context.Context, userID string) ([]ListGroupJoinedRow, error)
+	ListMemberInGroup(ctx context.Context, groupID string) (ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
+	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
+	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error)
 	UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) (User, error)
 	Verify(ctx context.Context, email string) (User, error)

@@ -7,3 +7,11 @@ import (
 type User struct {
 	entities.User
 }
+
+type Group struct {
+	entities.Group
+}
+
+type UserGroup struct {
+	entities.UserGroup
+}

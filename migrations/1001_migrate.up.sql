@@ -11,21 +11,28 @@ CREATE TABLE "user" (
 
 CREATE TABLE "group" (
   "group_id" text PRIMARY KEY,
-  "name" text NOT NULL,
+  "group_name" text NOT NULL,
+  "created_by" text NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "user_group" (
   "user_id" text NOT NULL,
   "group_id" text NOT NULL,
+  "role" text NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
   PRIMARY KEY ("user_id", "group_id")
 );
 
-CREATE INDEX ON "user" ("user_id");
+CREATE INDEX ON "user" using btree("user_id");
 
-CREATE INDEX ON "user" ("email");
+CREATE INDEX ON "user" using btree("email");
 
-CREATE INDEX ON "group" ("group_id");
+CREATE INDEX ON "group" using btree("group_id");
+
+CREATE INDEX ON "group" using btree("owner_id");
+
+CREATE INDEX ON "user_group" using btree("user_id", "group_id");
 
 ALTER TABLE "user_group" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("user_id");
 

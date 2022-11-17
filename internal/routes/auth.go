@@ -23,6 +23,14 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	auth.Use(a.AuthRequired)
 	auth.GET("/refresh", server.AuthService.Refresh)
 
+	group := route.Group("/group")
+	group.Use(a.AuthRequired)
+	group.POST("/", server.GroupService.CreateGroup)
+	group.GET("/", server.GroupService.ListGroupCreatedByUser)
+	group.GET("/joined", server.GroupService.ListGroupJoinedByUser)
+	group.GET("/member", server.GroupService.ShowGroupMember)
+	group.POST("/role", server.GroupService.AssignRole)
+
 	return route
 }
 

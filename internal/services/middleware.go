@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/vtv-us/kahoot-backend/internal/constants"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
 )
 
@@ -40,8 +41,8 @@ func (c *AuthMiddlewareConfig) AuthRequired(ctx *gin.Context) {
 
 	fmt.Println(res.Email)
 
-	ctx.Set("user_id", res.UserID)
-	ctx.Set("email", res.Email)
+	ctx.Set(constants.Token_USER_ID, res.UserID)
+	ctx.Set(constants.Token_EMAIL, res.Email)
 
 	ctx.Next()
 }

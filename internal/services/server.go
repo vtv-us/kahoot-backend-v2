@@ -6,7 +6,8 @@ import (
 )
 
 type Server struct {
-	AuthService *AuthService
+	AuthService  *AuthService
+	GroupService *GroupService
 }
 
 func NewServer(store repositories.Store, c *utils.Config) *Server {
@@ -17,8 +18,10 @@ func NewServer(store repositories.Store, c *utils.Config) *Server {
 	}
 
 	authService := NewAuthService(store, &jwt, c)
+	groupService := NewGroupService(store, c)
 
 	return &Server{
-		AuthService: authService,
+		AuthService:  authService,
+		GroupService: groupService,
 	}
 }

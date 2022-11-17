@@ -11,7 +11,8 @@ import (
 
 type Group struct {
 	GroupID   string    `json:"group_id"`
-	Name      string    `json:"name"`
+	GroupName string    `json:"group_name"`
+	CreatedBy string    `json:"created_by"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -27,6 +28,8 @@ type User struct {
 }
 
 type UserGroup struct {
-	UserID  string `json:"user_id"`
-	GroupID string `json:"group_id"`
+	UserID    string    `json:"user_id"`
+	GroupID   string    `json:"group_id"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
 }
