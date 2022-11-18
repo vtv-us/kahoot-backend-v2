@@ -20,3 +20,9 @@ Run service
 ```bash
 docker compose up -d
 ```
+Run after pull for remove old images
+
+```bash
+docker compose up -d --build
+docker images -a | grep none | awk '{ print $3; }' | xargs docker rmi
+```
