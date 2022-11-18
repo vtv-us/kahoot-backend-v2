@@ -20,6 +20,7 @@ CREATE TABLE "user_group" (
   "user_id" text NOT NULL,
   "group_id" text NOT NULL,
   "role" text NOT NULL,
+  "status" text NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   PRIMARY KEY ("user_id", "group_id")
 );

@@ -90,9 +90,19 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
+type userResponse struct {
+	UserID     string `json:"user_id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Verified   bool   `json:"verified"`
+	GoogleID   string `json:"google_id"`
+	FacebookID string `json:"facebook_id"`
+}
+
 type loginResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
+	User         userResponse `json:"user"`
 }
 
 func (s *AuthService) Login(ctx *gin.Context) {
@@ -132,6 +142,14 @@ func (s *AuthService) Login(ctx *gin.Context) {
 	rsp := loginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		User: userResponse{
+			UserID:     user.UserID,
+			Email:      user.Email,
+			Name:       user.Name,
+			Verified:   user.Verified,
+			GoogleID:   user.GoogleID.String,
+			FacebookID: user.FacebookID.String,
+		},
 	}
 
 	ctx.JSON(http.StatusOK, rsp)
