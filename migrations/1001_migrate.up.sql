@@ -30,7 +30,7 @@ CREATE INDEX ON "user" using btree("email");
 
 CREATE INDEX ON "group" using btree("group_id");
 
-CREATE INDEX ON "group" using btree("owner_id");
+CREATE INDEX ON "group" using btree("created_by");
 
 CREATE INDEX ON "user_group" using btree("user_id", "group_id");
 
