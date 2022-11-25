@@ -14,20 +14,27 @@ const addMemberToGroup = `-- name: AddMemberToGroup :exec
 INSERT INTO "user_group" (
   user_id,
   group_id,
-  role
+  role,
+  status
 ) VALUES (
-  $1, $2, $3
-)
+  $1, $2, $3, $4
+) ON CONFLICT (user_id, group_id) DO UPDATE SET role = $3, status = $4
 `
 
 type AddMemberToGroupParams struct {
 	UserID  string `json:"user_id"`
 	GroupID string `json:"group_id"`
 	Role    string `json:"role"`
+	Status  string `json:"status"`
 }
 
 func (q *Queries) AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error {
-	_, err := q.db.ExecContext(ctx, addMemberToGroup, arg.UserID, arg.GroupID, arg.Role)
+	_, err := q.db.ExecContext(ctx, addMemberToGroup,
+		arg.UserID,
+		arg.GroupID,
+		arg.Role,
+		arg.Status,
+	)
 	return err
 }
 
@@ -94,8 +101,8 @@ func (q *Queries) ListGroupJoined(ctx context.Context, userID string) ([]ListGro
 	return items, nil
 }
 
-const listMemberInGroup = `-- name: ListMemberInGroup :one
-SELECT user_id, role
+const listMemberInGroup = `-- name: ListMemberInGroup :many
+SELECT user_id, role, status
 FROM "user_group"
 WHERE group_id = $1
 ORDER BY user_id
@@ -104,13 +111,30 @@ ORDER BY user_id
 type ListMemberInGroupRow struct {
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
+	Status string `json:"status"`
 }
 
-func (q *Queries) ListMemberInGroup(ctx context.Context, groupID string) (ListMemberInGroupRow, error) {
-	row := q.db.QueryRowContext(ctx, listMemberInGroup, groupID)
-	var i ListMemberInGroupRow
-	err := row.Scan(&i.UserID, &i.Role)
-	return i, err
+func (q *Queries) ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error) {
+	rows, err := q.db.QueryContext(ctx, listMemberInGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMemberInGroupRow{}
+	for rows.Next() {
+		var i ListMemberInGroupRow
+		if err := rows.Scan(&i.UserID, &i.Role, &i.Status); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const removeMemberFromGroup = `-- name: RemoveMemberFromGroup :exec
@@ -142,5 +166,22 @@ type UpdateMemberRoleParams struct {
 
 func (q *Queries) UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error {
 	_, err := q.db.ExecContext(ctx, updateMemberRole, arg.UserID, arg.GroupID, arg.Role)
+	return err
+}
+
+const updateMemberStatus = `-- name: UpdateMemberStatus :exec
+UPDATE "user_group"
+SET status = $3
+WHERE user_id = $1 AND group_id = $2
+`
+
+type UpdateMemberStatusParams struct {
+	UserID  string `json:"user_id"`
+	GroupID string `json:"group_id"`
+	Status  string `json:"status"`
+}
+
+func (q *Queries) UpdateMemberStatus(ctx context.Context, arg UpdateMemberStatusParams) error {
+	_, err := q.db.ExecContext(ctx, updateMemberStatus, arg.UserID, arg.GroupID, arg.Status)
 	return err
 }

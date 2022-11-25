@@ -8,6 +8,7 @@ type Config struct {
 	Host                    string `mapstructure:"HOST"`
 	Port                    int    `mapstructure:"PORT"`
 	ServerAddress           string `mapstructure:"SERVER_ADDRESS"`
+	FrontendAddress         string `mapstructure:"FRONTEND_ADDRESS"`
 	JwtSecretKey            string `mapstructure:"JWT_SECRET_KEY"`
 	AccessTokenExpiredTime  int32  `mapstructure:"ACCESS_TOKEN_EXPIRED_TIME"`
 	RefreshTokenExpiredTime int32  `mapstructure:"REFRESH_TOKEN_EXPIRED_TIME"`
@@ -16,6 +17,13 @@ type Config struct {
 	FBSecret string `mapstructure:"FB_SECRET"`
 	GGKey    string `mapstructure:"GLE_KEY"`
 	GGSecret string `mapstructure:"GLE_SECRET"`
+
+	SendgridApiKey string `mapstructure:"SENDGRID_API_KEY"`
+	SendgridEmail  string `mapstructure:"SENDGRID_EMAIL"`
+	GunmailApiKey  string `mapstructure:"GUNMAIL_API_KEY"`
+	GunmailAddress string `mapstructure:"GUNMAIL_ADDRESS"`
+	Mail           string `mapstructure:"MAIL"`
+	MailPassword   string `mapstructure:"PASSWORD_MAIL"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

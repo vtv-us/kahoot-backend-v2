@@ -15,6 +15,8 @@ func InitRoutes(server *services.Server) *gin.Engine {
 
 	route.POST("/auth/register", server.AuthService.Register)
 	route.POST("/auth/login", server.AuthService.Login)
+	route.GET("/auth/verify/:email/:code", server.AuthService.Verify)
+	route.POST("/auth/resend/:email", server.AuthService.ResendEmail)
 
 	route.GET("/auth/:provider", server.AuthService.LoginProvider)
 	route.GET("/auth/:provider/callback", server.AuthService.ProviderCallback)
@@ -30,6 +32,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	group.GET("/joined", server.GroupService.ListGroupJoinedByUser)
 	group.GET("/member", server.GroupService.ShowGroupMember)
 	group.POST("/role", server.GroupService.AssignRole)
+	group.POST("/:groupid/join", server.GroupService.JoinGroup)
 
 	return route
 }

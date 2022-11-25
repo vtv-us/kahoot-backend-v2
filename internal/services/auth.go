@@ -11,19 +11,22 @@ import (
 	"github.com/oov/gothic"
 	"github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
+	"github.com/vtv-us/kahoot-backend/internal/utils/gmail"
 )
 
 type AuthService struct {
-	DB     repositories.Store
-	JWT    *utils.JwtWrapper
-	Config *utils.Config
+	DB           repositories.Store
+	EmailService *gmail.SendgridService
+	JWT          *utils.JwtWrapper
+	Config       *utils.Config
 }
 
-func NewAuthService(db repositories.Store, jwt *utils.JwtWrapper, c *utils.Config) *AuthService {
+func NewAuthService(db repositories.Store, sendgrid *gmail.SendgridService, jwt *utils.JwtWrapper, c *utils.Config) *AuthService {
 	return &AuthService{
-		DB:     db,
-		JWT:    jwt,
-		Config: c,
+		DB:           db,
+		EmailService: sendgrid,
+		JWT:          jwt,
+		Config:       c,
 	}
 }
 
@@ -55,10 +58,12 @@ func (s *AuthService) Register(ctx *gin.Context) {
 	}
 
 	arg := repositories.CreateUserParams{
-		UserID:   uuid.NewString(),
-		Email:    req.Email,
-		Name:     req.Name,
-		Password: hashedPassword,
+		UserID:       uuid.NewString(),
+		Email:        req.Email,
+		Name:         req.Name,
+		Password:     hashedPassword,
+		Verified:     false,
+		VerifiedCode: uuid.NewString(),
 	}
 
 	user, err := s.DB.CreateUser(ctx, arg)
@@ -71,6 +76,12 @@ func (s *AuthService) Register(ctx *gin.Context) {
 			}
 		}
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+	}
+
+	err = s.EmailService.SendEmailForVerified(user.Email, user.VerifiedCode)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(fmt.Errorf("user create but send email failed, pls send again: %w", err)))
+		return
 	}
 
 	rsp := registerResponse{
@@ -124,6 +135,11 @@ func (s *AuthService) Login(ctx *gin.Context) {
 
 	if err := utils.CheckPassword(req.Password, user.Password); err != nil {
 		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(fmt.Errorf("incorrect password")))
+		return
+	}
+
+	if !user.Verified {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not verified")))
 		return
 	}
 
@@ -269,4 +285,89 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, rsp)
+}
+
+type verifyRequest struct {
+	Email string `uri:"email"`
+	Code  string `uri:"code"`
+}
+
+type verifyResponse struct {
+	Message string
+}
+
+func (s *AuthService) Verify(ctx *gin.Context) {
+	var req verifyRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	if user.Verified {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user already verified")))
+		return
+	}
+
+	if (user.VerifiedCode) != req.Code {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("invalid code")))
+		return
+	}
+
+	user, err = s.DB.Verify(ctx, req.Email)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	rsp := verifyResponse{
+		Message: "user verified",
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
+}
+
+type resendEmail struct {
+	Email string `uri:"email"`
+}
+
+func (s *AuthService) ResendEmail(ctx *gin.Context) {
+	var req resendEmail
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	if user.Verified {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user already verified")))
+		return
+	}
+
+	// send email
+	err = s.EmailService.SendEmailForVerified(req.Email, user.VerifiedCode)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, nil)
 }

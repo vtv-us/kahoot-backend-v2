@@ -9,17 +9,20 @@ import (
 	"github.com/vtv-us/kahoot-backend/internal/constants"
 	"github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
+	"github.com/vtv-us/kahoot-backend/internal/utils/gmail"
 )
 
 type GroupService struct {
-	DB     repositories.Store
-	Config *utils.Config
+	DB           repositories.Store
+	EmailService *gmail.SendgridService
+	Config       *utils.Config
 }
 
-func NewGroupService(db repositories.Store, c *utils.Config) *GroupService {
+func NewGroupService(db repositories.Store, sendgrid *gmail.SendgridService, c *utils.Config) *GroupService {
 	return &GroupService{
-		DB:     db,
-		Config: c,
+		DB:           db,
+		EmailService: sendgrid,
+		Config:       c,
 	}
 }
 
@@ -42,6 +45,17 @@ func (s *GroupService) CreateGroup(ctx *gin.Context) {
 		CreatedBy: userID,
 	}
 	group, err := s.DB.CreateGroup(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	err = s.DB.AddMemberToGroup(ctx, repositories.AddMemberToGroupParams{
+		GroupID: group.GroupID,
+		UserID:  userID,
+		Role:    constants.Role_OWNER,
+		Status:  constants.UserGroupStatus_JOINED,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return
@@ -74,10 +88,19 @@ func (s *GroupService) ListGroupJoinedByUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, groups)
 }
 
-func (s *GroupService) ShowGroupMember(ctx *gin.Context) {
-	groupID := ctx.Param("group_id")
+type showMemberRequest struct {
+	GroupID string `json:"group_id"`
+}
 
-	members, err := s.DB.ListMemberInGroup(ctx, groupID)
+func (s *GroupService) ShowGroupMember(ctx *gin.Context) {
+	req := showMemberRequest{}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	members, err := s.DB.ListMemberInGroup(ctx, req.GroupID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return
@@ -144,4 +167,31 @@ func (s *GroupService) checkOwnerPermission(ctx *gin.Context, groupID string) {
 		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("you don't have permission to do this action")))
 		return
 	}
+}
+
+type joinGroupRequest struct {
+	GroupID string `uri:"groupid"`
+}
+
+func (s *GroupService) JoinGroup(ctx *gin.Context) {
+	userID := ctx.GetString(constants.Token_USER_ID)
+
+	var req joinGroupRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	err := s.DB.AddMemberToGroup(ctx, repositories.AddMemberToGroupParams{
+		GroupID: req.GroupID,
+		UserID:  userID,
+		Role:    constants.Role_MEMBER,
+		Status:  constants.UserGroupStatus_JOINED,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
 }

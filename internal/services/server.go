@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
+	"github.com/vtv-us/kahoot-backend/internal/utils/gmail"
 )
 
 type Server struct {
@@ -17,8 +18,9 @@ func NewServer(store repositories.Store, c *utils.Config) *Server {
 		Issuer:    "go-grpc-auth-svc",
 	}
 
-	authService := NewAuthService(store, &jwt, c)
-	groupService := NewGroupService(store, c)
+	emailSvc := gmail.NewMailService(c)
+	authService := NewAuthService(store, &emailSvc, &jwt, c)
+	groupService := NewGroupService(store, &emailSvc, c)
 
 	return &Server{
 		AuthService:  authService,

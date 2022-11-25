@@ -4,6 +4,7 @@ CREATE TABLE "user" (
   "name" text NOT NULL,
   "password" text NOT NULL,
   "verified" boolean NOT NULL DEFAULT false,
+  "verified_code" text NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "google_id" text,
   "facebook_id" text
