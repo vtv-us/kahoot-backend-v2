@@ -1,8 +1,13 @@
 package utils
 
-import "github.com/spf13/viper"
+import (
+	"os"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
+	Env                     string `mapstructure:"ENV"`
 	DBDriver                string `mapstructure:"DB_DRIVER"`
 	DBUrl                   string `mapstructure:"DATABASE_URL"`
 	Host                    string `mapstructure:"HOST"`
@@ -33,5 +38,15 @@ func LoadConfig(path string) (config Config, err error) {
 		return
 	}
 	err = viper.Unmarshal(&config)
+
+	if config.Env == "PROD" {
+		config.FBKey = os.Getenv("FB_KEY")
+		config.FBSecret = os.Getenv("FB_SECRET")
+		config.GGKey = os.Getenv("GLE_KEY")
+		config.GGSecret = os.Getenv("GLE_SECRET")
+		config.SendgridApiKey = os.Getenv("SENDGRID_API_KEY")
+		config.SendgridEmail = os.Getenv("SENDGRID_EMAIL")
+	}
+
 	return
 }
