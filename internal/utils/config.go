@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -49,9 +48,7 @@ func LoadConfig(path string) (config Config, err error) {
 		config.SendgridApiKey = os.Getenv("SENDGRID_API_KEY")
 		config.SendgridEmail = os.Getenv("SENDGRID_EMAIL")
 	}
-
-	js, _ := json.MarshalIndent(config, "", "  ")
-	fmt.Println(js)
+	fmt.Println(config)
 
 	return
 }
