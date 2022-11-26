@@ -46,6 +46,11 @@ func (s *SendgridService) SendEmailForVerified(toEmail string, verifyString stri
 		HtmlContent:      fmt.Sprintf(`<p>Click on the following link to verify your account: <a href="%s/auth/verify/%s/%s">link</a></p>`, s.Host, toEmail, verifyString),
 	}
 	message := mail.NewSingleEmail(emailContent.From, emailContent.Subject, emailContent.To, emailContent.PlainTextContent, emailContent.HtmlContent)
-	_, err := s.Client.Send(message)
-	return err
+	res, err := s.Client.Send(message)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(res.Body)
+	return nil
 }
