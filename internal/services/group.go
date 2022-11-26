@@ -78,7 +78,7 @@ func (s *GroupService) ListGroupCreatedByUser(ctx *gin.Context) {
 }
 
 type getGroupLinkRequest struct {
-	GroupID string `uri:"group_id" binding:"required"`
+	GroupID string `uri:"groupid" binding:"required"`
 }
 
 type getGroupLinkResponse struct {
