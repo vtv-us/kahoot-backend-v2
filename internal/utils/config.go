@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
@@ -47,6 +49,9 @@ func LoadConfig(path string) (config Config, err error) {
 		config.SendgridApiKey = os.Getenv("SENDGRID_API_KEY")
 		config.SendgridEmail = os.Getenv("SENDGRID_EMAIL")
 	}
+
+	js, _ := json.MarshalIndent(config, "", "  ")
+	fmt.Println(js)
 
 	return
 }
