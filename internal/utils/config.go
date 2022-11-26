@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
@@ -48,7 +47,6 @@ func LoadConfig(path string) (config Config, err error) {
 		config.SendgridApiKey = os.Getenv("SENDGRID_API_KEY")
 		config.SendgridEmail = os.Getenv("SENDGRID_EMAIL")
 	}
-	fmt.Println(config)
 
 	return
 }

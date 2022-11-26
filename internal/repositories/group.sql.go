@@ -48,6 +48,24 @@ func (q *Queries) DeleteGroup(ctx context.Context, groupID string) error {
 	return err
 }
 
+const getGroup = `-- name: GetGroup :one
+SELECT group_id, group_name, created_by, created_at
+FROM "group"
+WHERE group_id = $1
+`
+
+func (q *Queries) GetGroup(ctx context.Context, groupID string) (Group, error) {
+	row := q.db.QueryRowContext(ctx, getGroup, groupID)
+	var i Group
+	err := row.Scan(
+		&i.GroupID,
+		&i.GroupName,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listGroupCreatedByUser = `-- name: ListGroupCreatedByUser :many
 SELECT group_id, group_name, created_by, created_at FROM "group"
 WHERE created_by = $1

@@ -7,5 +7,5 @@ func ErrorResponse(err error) gin.H {
 }
 
 func SuccessResponse() gin.H {
-	return gin.H{"success": true}
+	return gin.H{"message": "success"}
 }

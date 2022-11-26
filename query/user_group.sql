@@ -3,6 +3,7 @@ SELECT g.group_id, group_name, ug.role, created_by, g.created_at
 FROM "user_group" ug
 INNER JOIN "group" g using (group_id)
 WHERE user_id = $1
+AND ug.status = 'joined'
 ORDER BY g.group_id;
 
 -- name: ListMemberInGroup :many
@@ -19,7 +20,7 @@ INSERT INTO "user_group" (
   status
 ) VALUES (
   $1, $2, $3, $4
-) ON CONFLICT (user_id, group_id) DO UPDATE SET role = $3, status = $4;
+) ON CONFLICT (user_id, group_id) DO UPDATE SET status = $4;
 
 -- name: RemoveMemberFromGroup :exec
 DELETE FROM "user_group"
@@ -39,3 +40,16 @@ WHERE user_id = $1 AND group_id = $2;
 SELECT role
 FROM "user_group"
 WHERE user_id = $1 AND group_id = $2;
+
+-- name: GetUserGroup :one
+SELECT *
+FROM "user_group"
+WHERE user_id = $1 AND group_id = $2;
+
+-- name: ListEmailInGroup :many
+SELECT u.email
+FROM "user_group" ug
+INNER JOIN "user" u using (user_id)
+WHERE group_id = $1
+AND ug.status = 'joined'
+ORDER BY u.email;

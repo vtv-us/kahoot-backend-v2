@@ -13,6 +13,8 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	route := gin.Default()
 	a := services.InitAuthMiddleware(server.AuthService)
 
+	route.LoadHTMLGlob("template/*.html")
+
 	route.POST("/auth/register", server.AuthService.Register)
 	route.POST("/auth/login", server.AuthService.Login)
 	route.GET("/auth/verify/:email/:code", server.AuthService.Verify)
@@ -29,10 +31,14 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	group.Use(a.AuthRequired)
 	group.POST("/", server.GroupService.CreateGroup)
 	group.GET("/", server.GroupService.ListGroupCreatedByUser)
+	group.GET("/link/:groupID", server.GroupService.GetGroupLink)
 	group.GET("/joined", server.GroupService.ListGroupJoinedByUser)
 	group.GET("/member", server.GroupService.ShowGroupMember)
 	group.POST("/role", server.GroupService.AssignRole)
-	group.POST("/:groupid/join", server.GroupService.JoinGroup)
+	group.POST("/:groupid", server.GroupService.JoinGroup)
+	group.POST("/:groupid/leave", server.GroupService.LeaveGroup)
+	group.POST("/kick", server.GroupService.KickMember)
+	group.POST("/invite", server.GroupService.InviteMember)
 
 	return route
 }

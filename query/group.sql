@@ -8,6 +8,11 @@ INSERT INTO "group" (
 )
 RETURNING *;
 
+-- name: GetGroup :one
+SELECT *
+FROM "group"
+WHERE group_id = $1;
+
 -- name: ListGroupCreatedByUser :many
 SELECT * FROM "group"
 WHERE created_by = $1

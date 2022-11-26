@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/lib/pq"
 	"github.com/oov/gothic"
+	"github.com/vtv-us/kahoot-backend/internal/constants"
 	"github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
 	"github.com/vtv-us/kahoot-backend/internal/utils/gmail"
@@ -176,9 +177,7 @@ type refreshResponse struct {
 }
 
 func (s *AuthService) Refresh(ctx *gin.Context) {
-	email := ctx.GetString("email")
-
-	fmt.Println(email)
+	email := ctx.GetString(constants.Token_EMAIL)
 
 	user, err := s.DB.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -288,12 +287,8 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 }
 
 type verifyRequest struct {
-	Email string `uri:"email"`
-	Code  string `uri:"code"`
-}
-
-type verifyResponse struct {
-	Message string
+	Email string `uri:"email" binding:"required,email"`
+	Code  string `uri:"code" binding:"required"`
 }
 
 func (s *AuthService) Verify(ctx *gin.Context) {
@@ -329,15 +324,13 @@ func (s *AuthService) Verify(ctx *gin.Context) {
 		return
 	}
 
-	rsp := verifyResponse{
-		Message: "user verified",
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.HTML(http.StatusOK, "success.html", gin.H{
+		"content": s.Config.FrontendAddress,
+	})
 }
 
 type resendEmail struct {
-	Email string `uri:"email"`
+	Email string `uri:"email" binding:"required"`
 }
 
 func (s *AuthService) ResendEmail(ctx *gin.Context) {
@@ -369,5 +362,7 @@ func (s *AuthService) ResendEmail(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, nil)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "email sent",
+	})
 }

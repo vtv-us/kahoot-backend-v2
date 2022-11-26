@@ -18,7 +18,7 @@ INSERT INTO "user_group" (
   status
 ) VALUES (
   $1, $2, $3, $4
-) ON CONFLICT (user_id, group_id) DO UPDATE SET role = $3, status = $4
+) ON CONFLICT (user_id, group_id) DO UPDATE SET status = $4
 `
 
 type AddMemberToGroupParams struct {
@@ -56,11 +56,68 @@ func (q *Queries) GetRoleInGroup(ctx context.Context, arg GetRoleInGroupParams) 
 	return role, err
 }
 
+const getUserGroup = `-- name: GetUserGroup :one
+SELECT user_id, group_id, role, status, created_at
+FROM "user_group"
+WHERE user_id = $1 AND group_id = $2
+`
+
+type GetUserGroupParams struct {
+	UserID  string `json:"user_id"`
+	GroupID string `json:"group_id"`
+}
+
+func (q *Queries) GetUserGroup(ctx context.Context, arg GetUserGroupParams) (UserGroup, error) {
+	row := q.db.QueryRowContext(ctx, getUserGroup, arg.UserID, arg.GroupID)
+	var i UserGroup
+	err := row.Scan(
+		&i.UserID,
+		&i.GroupID,
+		&i.Role,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const listEmailInGroup = `-- name: ListEmailInGroup :many
+SELECT u.email
+FROM "user_group" ug
+INNER JOIN "user" u using (user_id)
+WHERE group_id = $1
+AND ug.status = 'joined'
+ORDER BY u.email
+`
+
+func (q *Queries) ListEmailInGroup(ctx context.Context, groupID string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listEmailInGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err != nil {
+			return nil, err
+		}
+		items = append(items, email)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listGroupJoined = `-- name: ListGroupJoined :many
 SELECT g.group_id, group_name, ug.role, created_by, g.created_at
 FROM "user_group" ug
 INNER JOIN "group" g using (group_id)
 WHERE user_id = $1
+AND ug.status = 'joined'
 ORDER BY g.group_id
 `
 

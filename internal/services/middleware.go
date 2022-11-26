@@ -29,17 +29,15 @@ func (c *AuthMiddlewareConfig) AuthRequired(ctx *gin.Context) {
 	token := strings.Split(authorization, "Bearer ")
 
 	if len(token) < 2 {
-		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(fmt.Errorf("invalid authorization header")))
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse(fmt.Errorf("invalid authorization header")))
 		return
 	}
 
 	res, err := c.auth.JWT.ValidateToken(token[1])
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse(err))
 		return
 	}
-
-	fmt.Println(res.Email)
 
 	ctx.Set(constants.Token_USER_ID, res.UserID)
 	ctx.Set(constants.Token_EMAIL, res.Email)
