@@ -4,6 +4,7 @@ FROM "user_group" ug
 INNER JOIN "group" g using (group_id)
 WHERE user_id = $1
 AND ug.status = 'joined'
+AND ug.role != 'owner'
 ORDER BY g.group_id;
 
 -- name: ListMemberInGroup :many

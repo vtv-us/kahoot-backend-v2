@@ -27,7 +27,7 @@ type User struct {
 	CreatedAt    time.Time      `json:"created_at"`
 	GoogleID     sql.NullString `json:"google_id"`
 	FacebookID   sql.NullString `json:"facebook_id"`
-	AvatarUrl    sql.NullString `json:"avatar_url"`
+	AvatarUrl    string         `json:"avatar_url"`
 }
 
 type UserGroup struct {

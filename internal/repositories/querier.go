@@ -20,8 +20,8 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserGroup(ctx context.Context, arg GetUserGroupParams) (UserGroup, error)
 	ListEmailInGroup(ctx context.Context, groupID string) ([]string, error)
-	ListGroupCreatedByUser(ctx context.Context, createdBy string) ([]Group, error)
 	ListGroupJoined(ctx context.Context, userID string) ([]ListGroupJoinedRow, error)
+	ListGroupOwned(ctx context.Context, userID string) ([]ListGroupOwnedRow, error)
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error

@@ -174,8 +174,8 @@ RETURNING user_id, email, name, password, verified, verified_code, created_at, g
 `
 
 type UpdateAvatarUrlParams struct {
-	UserID    string         `json:"user_id"`
-	AvatarUrl sql.NullString `json:"avatar_url"`
+	UserID    string `json:"user_id"`
+	AvatarUrl string `json:"avatar_url"`
 }
 
 func (q *Queries) UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error) {

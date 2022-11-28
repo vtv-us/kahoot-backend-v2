@@ -7,6 +7,7 @@ package repositories
 
 import (
 	"context"
+	"time"
 )
 
 const createGroup = `-- name: CreateGroup :one
@@ -68,27 +69,49 @@ func (q *Queries) GetGroup(ctx context.Context, groupID string) (Group, error) {
 	return i, err
 }
 
-const listGroupCreatedByUser = `-- name: ListGroupCreatedByUser :many
-SELECT group_id, group_name, created_by, created_at, description FROM "group"
-WHERE created_by = $1
+const listGroupOwned = `-- name: ListGroupOwned :many
+SELECT "group".group_id, group_name, created_by, "group".created_at, description, user_id, ug.group_id, role, status, ug.created_at
+FROM "group"
+JOIN "user_group" ug using (group_id)
+WHERE ug.user_id = $1
+AND ug.role = 'owner'
+AND ug.status = 'joined'
 ORDER BY group_id
 `
 
-func (q *Queries) ListGroupCreatedByUser(ctx context.Context, createdBy string) ([]Group, error) {
-	rows, err := q.db.QueryContext(ctx, listGroupCreatedByUser, createdBy)
+type ListGroupOwnedRow struct {
+	GroupID     string    `json:"group_id"`
+	GroupName   string    `json:"group_name"`
+	CreatedBy   string    `json:"created_by"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description string    `json:"description"`
+	UserID      string    `json:"user_id"`
+	GroupID_2   string    `json:"group_id_2"`
+	Role        string    `json:"role"`
+	Status      string    `json:"status"`
+	CreatedAt_2 time.Time `json:"created_at_2"`
+}
+
+func (q *Queries) ListGroupOwned(ctx context.Context, userID string) ([]ListGroupOwnedRow, error) {
+	rows, err := q.db.QueryContext(ctx, listGroupOwned, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Group{}
+	items := []ListGroupOwnedRow{}
 	for rows.Next() {
-		var i Group
+		var i ListGroupOwnedRow
 		if err := rows.Scan(
 			&i.GroupID,
 			&i.GroupName,
 			&i.CreatedBy,
 			&i.CreatedAt,
 			&i.Description,
+			&i.UserID,
+			&i.GroupID_2,
+			&i.Role,
+			&i.Status,
+			&i.CreatedAt_2,
 		); err != nil {
 			return nil, err
 		}

@@ -13,9 +13,13 @@ SELECT *
 FROM "group"
 WHERE group_id = $1;
 
--- name: ListGroupCreatedByUser :many
-SELECT * FROM "group"
-WHERE created_by = $1
+-- name: ListGroupOwned :many
+SELECT *
+FROM "group"
+JOIN "user_group" ug using (group_id)
+WHERE ug.user_id = $1
+AND ug.role = 'owner'
+AND ug.status = 'joined'
 ORDER BY group_id;
 
 -- name: DeleteGroup :exec

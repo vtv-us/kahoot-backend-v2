@@ -11,4 +11,6 @@ const (
 	UserGroupStatus_JOINED   = "joined"
 	UserGroupStatus_PENDING  = "pending"
 	UserGroupStatus_DECLINED = "declined"
+
+	Cookies_ACCESS_TOKEN = "cookieAccess"
 )

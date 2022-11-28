@@ -68,7 +68,7 @@ func (s *GroupService) CreateGroup(ctx *gin.Context) {
 func (s *GroupService) ListGroupCreatedByUser(ctx *gin.Context) {
 	userID := ctx.GetString(constants.Token_USER_ID)
 
-	groups, err := s.DB.ListGroupCreatedByUser(ctx, userID)
+	groups, err := s.DB.ListGroupOwned(ctx, userID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return

@@ -164,7 +164,7 @@ func (s *AuthService) Login(ctx *gin.Context) {
 			UserID:     user.UserID,
 			Email:      user.Email,
 			Name:       user.Name,
-			AvatarUrl:  utils.StringFromNull(user.AvatarUrl),
+			AvatarUrl:  user.AvatarUrl,
 			Verified:   user.Verified,
 			GoogleID:   user.GoogleID.String,
 			FacebookID: user.FacebookID.String,

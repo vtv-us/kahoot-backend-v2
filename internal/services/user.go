@@ -43,7 +43,7 @@ func (s *UserService) GetProfile(ctx *gin.Context) {
 			UserID:     user.UserID,
 			Name:       user.Name,
 			Email:      user.Email,
-			AvatarUrl:  user.AvatarUrl.String,
+			AvatarUrl:  user.AvatarUrl,
 			Verified:   user.Verified,
 			GoogleID:   user.GoogleID.String,
 			FacebookID: user.FacebookID.String,
@@ -73,7 +73,7 @@ func (s *UserService) UploadAvatar(ctx *gin.Context) {
 	}
 
 	user, err := s.DB.UpdateAvatarUrl(ctx, repositories.UpdateAvatarUrlParams{
-		AvatarUrl: utils.NullString(uploadUrl),
+		AvatarUrl: uploadUrl,
 		UserID:    userID,
 	})
 	if err != nil {
@@ -126,7 +126,7 @@ func (s *UserService) UpdateProfile(ctx *gin.Context) {
 			UserID:     user.UserID,
 			Email:      user.Email,
 			Name:       user.Name,
-			AvatarUrl:  user.AvatarUrl.String,
+			AvatarUrl:  user.AvatarUrl,
 			Verified:   user.Verified,
 			GoogleID:   user.GoogleID.String,
 			FacebookID: user.FacebookID.String,
