@@ -17,11 +17,6 @@ func main() {
 		log.Fatal("can't load config", err)
 	}
 
-	err = utils.MigrateDB(c)
-	if err != nil {
-		log.Fatal("can't migrate db", err)
-	}
-
 	conn, err := sql.Open(c.DBDriver, c.DBUrl)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)

@@ -25,9 +25,11 @@ type Querier interface {
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
+	UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error)
 	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error
 	UpdateMemberStatus(ctx context.Context, arg UpdateMemberStatusParams) error
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error)
+	UpdateProfile(ctx context.Context, arg UpdateProfileParams) (User, error)
 	UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) (User, error)
 	Verify(ctx context.Context, email string) (User, error)
 }

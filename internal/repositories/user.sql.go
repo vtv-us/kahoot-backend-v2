@@ -23,7 +23,7 @@ INSERT INTO "user" (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8
 )
-RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
 `
 
 type CreateUserParams struct {
@@ -59,6 +59,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.GoogleID,
 		&i.FacebookID,
+		&i.AvatarUrl,
 	)
 	return i, err
 }
@@ -74,7 +75,7 @@ func (q *Queries) DeleteUser(ctx context.Context, email string) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id FROM "user"
+SELECT user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url FROM "user"
 WHERE user_id = $1 LIMIT 1
 `
 
@@ -91,12 +92,13 @@ func (q *Queries) GetUser(ctx context.Context, userID string) (User, error) {
 		&i.CreatedAt,
 		&i.GoogleID,
 		&i.FacebookID,
+		&i.AvatarUrl,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id FROM "user"
+SELECT user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url FROM "user"
 WHERE email = $1 LIMIT 1
 `
 
@@ -113,12 +115,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.CreatedAt,
 		&i.GoogleID,
 		&i.FacebookID,
+		&i.AvatarUrl,
 	)
 	return i, err
 }
 
 const listUser = `-- name: ListUser :many
-SELECT user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id FROM "user"
+SELECT user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url FROM "user"
 ORDER BY user_id
 LIMIT $1
 OFFSET $2
@@ -148,6 +151,7 @@ func (q *Queries) ListUser(ctx context.Context, arg ListUserParams) ([]User, err
 			&i.CreatedAt,
 			&i.GoogleID,
 			&i.FacebookID,
+			&i.AvatarUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -162,11 +166,41 @@ func (q *Queries) ListUser(ctx context.Context, arg ListUserParams) ([]User, err
 	return items, nil
 }
 
+const updateAvatarUrl = `-- name: UpdateAvatarUrl :one
+UPDATE "user"
+SET avatar_url = $2
+WHERE user_id = $1
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
+`
+
+type UpdateAvatarUrlParams struct {
+	UserID    string         `json:"user_id"`
+	AvatarUrl sql.NullString `json:"avatar_url"`
+}
+
+func (q *Queries) UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateAvatarUrl, arg.UserID, arg.AvatarUrl)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Email,
+		&i.Name,
+		&i.Password,
+		&i.Verified,
+		&i.VerifiedCode,
+		&i.CreatedAt,
+		&i.GoogleID,
+		&i.FacebookID,
+		&i.AvatarUrl,
+	)
+	return i, err
+}
+
 const updatePassword = `-- name: UpdatePassword :one
 UPDATE "user"
 SET password = $2
 WHERE email = $1
-RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
 `
 
 type UpdatePasswordParams struct {
@@ -187,6 +221,37 @@ func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) 
 		&i.CreatedAt,
 		&i.GoogleID,
 		&i.FacebookID,
+		&i.AvatarUrl,
+	)
+	return i, err
+}
+
+const updateProfile = `-- name: UpdateProfile :one
+UPDATE "user"
+SET name = $2
+WHERE user_id = $1
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
+`
+
+type UpdateProfileParams struct {
+	UserID string `json:"user_id"`
+	Name   string `json:"name"`
+}
+
+func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateProfile, arg.UserID, arg.Name)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Email,
+		&i.Name,
+		&i.Password,
+		&i.Verified,
+		&i.VerifiedCode,
+		&i.CreatedAt,
+		&i.GoogleID,
+		&i.FacebookID,
+		&i.AvatarUrl,
 	)
 	return i, err
 }
@@ -195,7 +260,7 @@ const updateSocialID = `-- name: UpdateSocialID :one
 UPDATE "user"
 SET google_id = $2, facebook_id = $3
 WHERE email = $1
-RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
 `
 
 type UpdateSocialIDParams struct {
@@ -217,6 +282,7 @@ func (q *Queries) UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) 
 		&i.CreatedAt,
 		&i.GoogleID,
 		&i.FacebookID,
+		&i.AvatarUrl,
 	)
 	return i, err
 }
@@ -225,7 +291,7 @@ const verify = `-- name: Verify :one
 UPDATE "user"
 SET verified = true
 WHERE email = $1
-RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
 `
 
 func (q *Queries) Verify(ctx context.Context, email string) (User, error) {
@@ -241,6 +307,7 @@ func (q *Queries) Verify(ctx context.Context, email string) (User, error) {
 		&i.CreatedAt,
 		&i.GoogleID,
 		&i.FacebookID,
+		&i.AvatarUrl,
 	)
 	return i, err
 }

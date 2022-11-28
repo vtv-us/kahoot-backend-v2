@@ -15,3 +15,11 @@ func NullString(s string) sql.NullString {
 		Valid:  true,
 	}
 }
+
+func StringFromNull(n sql.NullString) string {
+	if !n.Valid {
+		return ""
+	}
+
+	return n.String
+}

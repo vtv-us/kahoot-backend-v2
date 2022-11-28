@@ -106,6 +106,7 @@ type userResponse struct {
 	UserID     string `json:"user_id"`
 	Email      string `json:"email"`
 	Name       string `json:"name"`
+	AvatarUrl  string `json:"avatar_url"`
 	Verified   bool   `json:"verified"`
 	GoogleID   string `json:"google_id"`
 	FacebookID string `json:"facebook_id"`
@@ -163,6 +164,7 @@ func (s *AuthService) Login(ctx *gin.Context) {
 			UserID:     user.UserID,
 			Email:      user.Email,
 			Name:       user.Name,
+			AvatarUrl:  utils.StringFromNull(user.AvatarUrl),
 			Verified:   user.Verified,
 			GoogleID:   user.GoogleID.String,
 			FacebookID: user.FacebookID.String,

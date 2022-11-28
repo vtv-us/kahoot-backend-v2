@@ -40,6 +40,12 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	group.POST("/kick", server.GroupService.KickMember)
 	group.POST("/invite", server.GroupService.InviteMember)
 
+	user := route.Group("/user")
+	user.Use(a.AuthRequired)
+	user.GET("/profile", server.UserService.GetProfile)
+	user.POST("/profile", server.UserService.UpdateProfile)
+	user.POST("/avatar", server.UserService.UploadAvatar)
+
 	return route
 }
 

@@ -10,10 +10,11 @@ import (
 )
 
 type Group struct {
-	GroupID   string    `json:"group_id"`
-	GroupName string    `json:"group_name"`
-	CreatedBy string    `json:"created_by"`
-	CreatedAt time.Time `json:"created_at"`
+	GroupID     string    `json:"group_id"`
+	GroupName   string    `json:"group_name"`
+	CreatedBy   string    `json:"created_by"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description string    `json:"description"`
 }
 
 type User struct {
@@ -26,6 +27,7 @@ type User struct {
 	CreatedAt    time.Time      `json:"created_at"`
 	GoogleID     sql.NullString `json:"google_id"`
 	FacebookID   sql.NullString `json:"facebook_id"`
+	AvatarUrl    sql.NullString `json:"avatar_url"`
 }
 
 type UserGroup struct {

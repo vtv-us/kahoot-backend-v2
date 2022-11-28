@@ -25,6 +25,9 @@ type Config struct {
 
 	SendgridApiKey string `mapstructure:"SENDGRID_API_KEY"`
 	SendgridEmail  string `mapstructure:"SENDGRID_EMAIL"`
+
+	CloudinaryUrl          string `mapstructure:"CLOUDINARY_URL"`
+	CloudinaryUploadFolder string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
@@ -46,6 +49,8 @@ func LoadConfig(path string) (config Config, err error) {
 		config.GGSecret = os.Getenv("GLE_SECRET")
 		config.SendgridApiKey = os.Getenv("SENDGRID_API_KEY")
 		config.SendgridEmail = os.Getenv("SENDGRID_EMAIL")
+		config.CloudinaryUrl = os.Getenv("CLOUDINARY_URL")
+		config.CloudinaryUploadFolder = os.Getenv("CLOUDINARY_UPLOAD_FOLDER")
 	}
 
 	return

@@ -17,7 +17,7 @@ INSERT INTO "group" (
 ) VALUES (
   $1, $2, $3
 )
-RETURNING group_id, group_name, created_by, created_at
+RETURNING group_id, group_name, created_by, created_at, description
 `
 
 type CreateGroupParams struct {
@@ -34,6 +34,7 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 		&i.GroupName,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.Description,
 	)
 	return i, err
 }
@@ -49,7 +50,7 @@ func (q *Queries) DeleteGroup(ctx context.Context, groupID string) error {
 }
 
 const getGroup = `-- name: GetGroup :one
-SELECT group_id, group_name, created_by, created_at
+SELECT group_id, group_name, created_by, created_at, description
 FROM "group"
 WHERE group_id = $1
 `
@@ -62,12 +63,13 @@ func (q *Queries) GetGroup(ctx context.Context, groupID string) (Group, error) {
 		&i.GroupName,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.Description,
 	)
 	return i, err
 }
 
 const listGroupCreatedByUser = `-- name: ListGroupCreatedByUser :many
-SELECT group_id, group_name, created_by, created_at FROM "group"
+SELECT group_id, group_name, created_by, created_at, description FROM "group"
 WHERE created_by = $1
 ORDER BY group_id
 `
@@ -86,6 +88,7 @@ func (q *Queries) ListGroupCreatedByUser(ctx context.Context, createdBy string) 
 			&i.GroupName,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}

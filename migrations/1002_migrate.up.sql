@@ -1,0 +1,3 @@
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS avatar_url text NOT NULL DEFAULT '';
+
+ALTER TABLE "group" ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';

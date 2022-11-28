@@ -45,6 +45,18 @@ SET google_id = $2, facebook_id = $3
 WHERE email = $1
 RETURNING *;
 
+-- name: UpdateAvatarUrl :one
+UPDATE "user"
+SET avatar_url = $2
+WHERE user_id = $1
+RETURNING *;
+
+-- name: UpdateProfile :one
+UPDATE "user"
+SET name = $2
+WHERE user_id = $1
+RETURNING *;
+
 -- name: DeleteUser :exec
 DELETE FROM "user"
 WHERE email = $1;
