@@ -20,7 +20,7 @@ JOIN "user_group" ug using (group_id)
 WHERE ug.user_id = $1
 AND ug.role = 'owner'
 AND ug.status = 'joined'
-ORDER BY group_id;
+ORDER BY ug.group_id;
 
 -- name: DeleteGroup :exec
 DELETE FROM "group"
