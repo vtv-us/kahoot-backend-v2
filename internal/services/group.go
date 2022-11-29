@@ -79,6 +79,26 @@ func (s *GroupService) ListGroupCreatedByUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, groups)
 }
 
+type getGroupByIDRequest struct {
+	GroupID string `uri:"id" binding:"required"`
+}
+
+func (s *GroupService) GetGroupByID(ctx *gin.Context) {
+	var req getGroupByIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	group, err := s.DB.GetGroup(ctx, req.GroupID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, group)
+}
+
 type getGroupLinkRequest struct {
 	GroupID string `uri:"groupid" binding:"required"`
 }
