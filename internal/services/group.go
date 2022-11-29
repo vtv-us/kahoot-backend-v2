@@ -137,9 +137,9 @@ func (s *GroupService) ShowGroupMember(ctx *gin.Context) {
 
 	// sort by role
 	// owner -> co-owner -> member
-	owner := []repositories.ListMemberInGroupRow{}
-	coOwner := []repositories.ListMemberInGroupRow{}
-	member := []repositories.ListMemberInGroupRow{}
+	owner := make([]repositories.ListMemberInGroupRow, 0)
+	coOwner := make([]repositories.ListMemberInGroupRow, 0)
+	member := make([]repositories.ListMemberInGroupRow, 0)
 	for _, m := range members {
 		if m.Role == constants.Role_OWNER {
 			owner = append(owner, m)
