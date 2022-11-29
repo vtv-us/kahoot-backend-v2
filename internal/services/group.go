@@ -118,13 +118,13 @@ func (s *GroupService) ListGroupJoinedByUser(ctx *gin.Context) {
 }
 
 type showMemberRequest struct {
-	GroupID string `json:"group_id" binding:"required"`
+	GroupID string `uri:"groupid" binding:"required"`
 }
 
 func (s *GroupService) ShowGroupMember(ctx *gin.Context) {
 	req := showMemberRequest{}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}

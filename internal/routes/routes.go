@@ -34,7 +34,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	group.GET("/", server.GroupService.ListGroupCreatedByUser)
 	group.GET("/link/:groupid", server.GroupService.GetGroupLink)
 	group.GET("/joined", server.GroupService.ListGroupJoinedByUser)
-	group.GET("/member", server.GroupService.ShowGroupMember)
+	group.GET("/:groupid/member", server.GroupService.ShowGroupMember)
 	group.POST("/role", server.GroupService.AssignRole)
 	group.POST("/:groupid", server.GroupService.JoinGroup)
 	group.POST("/:groupid/leave", server.GroupService.LeaveGroup)
