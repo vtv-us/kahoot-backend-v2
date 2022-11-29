@@ -54,3 +54,10 @@ INNER JOIN "user" u using (user_id)
 WHERE group_id = $1
 AND ug.status = 'joined'
 ORDER BY u.email;
+
+-- name: CheckUserInGroup :one
+SELECT EXISTS (
+  SELECT 1
+  FROM "user_group"
+  WHERE user_id = $1 AND group_id = $2
+);

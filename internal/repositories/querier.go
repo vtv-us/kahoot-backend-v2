@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
+	CheckUserInGroup(ctx context.Context, arg CheckUserInGroupParams) (bool, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteGroup(ctx context.Context, groupID string) error

@@ -2,9 +2,10 @@
 INSERT INTO "group" (
   group_id,
   group_name,
-  created_by
+  created_by,
+  description
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
 RETURNING *;
 

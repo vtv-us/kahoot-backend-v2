@@ -28,7 +28,8 @@ func NewGroupService(db repositories.Store, sendgrid *gmail.SendgridService, c *
 }
 
 type createGroupRequest struct {
-	GroupName string `json:"group_name" binding:"required"`
+	GroupName   string `json:"group_name" binding:"required"`
+	Description string `json:"description"`
 }
 
 func (s *GroupService) CreateGroup(ctx *gin.Context) {
@@ -41,9 +42,10 @@ func (s *GroupService) CreateGroup(ctx *gin.Context) {
 	}
 
 	arg := repositories.CreateGroupParams{
-		GroupID:   uuid.NewString(),
-		GroupName: req.GroupName,
-		CreatedBy: userID,
+		GroupID:     uuid.NewString(),
+		GroupName:   req.GroupName,
+		CreatedBy:   userID,
+		Description: req.Description,
 	}
 	group, err := s.DB.CreateGroup(ctx, arg)
 	if err != nil {
@@ -339,9 +341,16 @@ func (s *GroupService) InviteMember(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.GroupID, "")
+	userIsInGroup, err := s.DB.CheckUserInGroup(ctx, repositories.CheckUserInGroupParams{
+		GroupID: req.GroupID,
+		UserID:  inviterID,
+	})
 	if err != nil {
-		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+	if !userIsInGroup {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(fmt.Errorf("you are not in this group")))
 		return
 	}
 

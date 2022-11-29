@@ -14,21 +14,28 @@ const createGroup = `-- name: CreateGroup :one
 INSERT INTO "group" (
   group_id,
   group_name,
-  created_by
+  created_by,
+  description
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
 RETURNING group_id, group_name, created_by, created_at, description
 `
 
 type CreateGroupParams struct {
-	GroupID   string `json:"group_id"`
-	GroupName string `json:"group_name"`
-	CreatedBy string `json:"created_by"`
+	GroupID     string `json:"group_id"`
+	GroupName   string `json:"group_name"`
+	CreatedBy   string `json:"created_by"`
+	Description string `json:"description"`
 }
 
 func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error) {
-	row := q.db.QueryRowContext(ctx, createGroup, arg.GroupID, arg.GroupName, arg.CreatedBy)
+	row := q.db.QueryRowContext(ctx, createGroup,
+		arg.GroupID,
+		arg.GroupName,
+		arg.CreatedBy,
+		arg.Description,
+	)
 	var i Group
 	err := row.Scan(
 		&i.GroupID,
