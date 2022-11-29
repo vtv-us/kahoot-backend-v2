@@ -53,7 +53,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 
 func InitGoth(config *utils.Config) {
 	goth.UseProviders(
-		facebook.New(config.FBKey, config.FBSecret, config.ServerAddress+"/auth/facebook/callback"),
-		google.New(config.GGKey, config.GGSecret, config.ServerAddress+"/auth/google/callback"),
+		facebook.New(config.FBKey, config.FBSecret, config.FrontendAddress+"/auth/facebook/callback"),
+		google.New(config.GGKey, config.GGSecret, config.FrontendAddress+"/auth/google/callback"),
 	)
 }
