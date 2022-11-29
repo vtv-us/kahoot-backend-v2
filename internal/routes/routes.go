@@ -12,6 +12,7 @@ import (
 func InitRoutes(server *services.Server) *gin.Engine {
 	route := gin.Default()
 	a := services.InitAuthMiddleware(server.AuthService)
+	route.Use(a.CORSMiddleware)
 
 	route.LoadHTMLGlob("template/*.html")
 
