@@ -52,7 +52,7 @@ func (s *SendgridService) SendEmailForVerified(toEmail string, verifyString stri
 	return err
 }
 
-func (s *SendgridService) SendEmailForInvite(toEmail string, groupID string, groupName string, inviter string) error {
+func (s *SendgridService) SendEmailForInvite(toEmail string, groupID string, groupName string, inviter string, inviterID string) error {
 	emailContent := EmailContent{
 		From: &mail.Email{
 			Name:    "Kahoot",
@@ -63,8 +63,8 @@ func (s *SendgridService) SendEmailForInvite(toEmail string, groupID string, gro
 			Address: toEmail,
 		},
 		Subject:          "You have been invited to a Kahoot group",
-		PlainTextContent: fmt.Sprintf(`You have been invited to join the group %s by %s. Click on the following link to join: %s`, groupName, inviter, utils.GenLink(s.Frontend, groupID)),
-		HtmlContent:      fmt.Sprintf(`<p>You have been invited to join the group %s by %s. Click on the following link to join: <a href="%s">link</a></p>`, groupName, inviter, utils.GenLink(s.Frontend, groupID)),
+		PlainTextContent: fmt.Sprintf(`You have been invited to join the group %s by %s. Click on the following link to join: %s`, groupName, inviter, utils.GenLink(s.Frontend, groupID, inviterID)),
+		HtmlContent:      fmt.Sprintf(`<p>You have been invited to join the group %s by %s. Click on the following link to join: <a href="%s">link</a></p>`, groupName, inviter, utils.GenLink(s.Frontend, groupID, inviterID)),
 	}
 	message := mail.NewSingleEmail(emailContent.From, emailContent.Subject, emailContent.To, emailContent.PlainTextContent, emailContent.HtmlContent)
 	_, err := s.Client.Send(message)

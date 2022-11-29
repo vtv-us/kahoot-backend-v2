@@ -88,19 +88,20 @@ type getGroupLinkResponse struct {
 }
 
 func (s *GroupService) GetGroupLink(ctx *gin.Context) {
+	userID := ctx.GetString(constants.Token_USER_ID)
 	var req getGroupLinkRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.GroupID, "")
+	err := s.checkUserInGroup(ctx, req.GroupID, userID)
 	if err != nil {
-		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
 
-	link := utils.GenLink(s.Config.FrontendAddress, req.GroupID)
+	link := utils.GenLink(s.Config.FrontendAddress, req.GroupID, userID)
 
 	ctx.JSON(http.StatusOK, getGroupLinkResponse{
 		GroupLink: link,
@@ -341,16 +342,9 @@ func (s *GroupService) InviteMember(ctx *gin.Context) {
 		return
 	}
 
-	userIsInGroup, err := s.DB.CheckUserInGroup(ctx, repositories.CheckUserInGroupParams{
-		GroupID: req.GroupID,
-		UserID:  inviterID,
-	})
+	err := s.checkUserInGroup(ctx, req.GroupID, inviterID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
-		return
-	}
-	if !userIsInGroup {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(fmt.Errorf("you are not in this group")))
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
 		return
 	}
 
@@ -382,7 +376,7 @@ func (s *GroupService) InviteMember(ctx *gin.Context) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(fmt.Errorf("this email is not registered, we will send an invitation email to this email")))
-			err = s.EmailService.SendEmailForInvite(req.Email, req.GroupID, group.GroupName, inviter.Name)
+			err = s.EmailService.SendEmailForInvite(req.Email, req.GroupID, group.GroupName, inviter.Name, inviter.UserID)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(fmt.Errorf("can't send email")))
 				return
@@ -404,11 +398,26 @@ func (s *GroupService) InviteMember(ctx *gin.Context) {
 		return
 	}
 
-	err = s.EmailService.SendEmailForInvite(user.Email, req.GroupID, group.GroupName, inviter.Name)
+	err = s.EmailService.SendEmailForInvite(user.Email, req.GroupID, group.GroupName, inviter.Name, inviter.UserID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(fmt.Errorf("can't send email")))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessResponse())
+}
+
+func (s *GroupService) checkUserInGroup(ctx *gin.Context, groupID string, userID string) error {
+	userIsInGroup, err := s.DB.CheckUserInGroup(ctx, repositories.CheckUserInGroupParams{
+		GroupID: groupID,
+		UserID:  userID,
+	})
+	if err != nil {
+		return err
+	}
+	if !userIsInGroup {
+		return fmt.Errorf("you are not in this group")
+	}
+
+	return nil
 }

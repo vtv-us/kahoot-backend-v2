@@ -26,6 +26,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 
 	auth := route.Group("/auth")
 	auth.Use(a.AuthRequired)
+	auth.POST("/change-password", server.AuthService.ChangePassword)
 	auth.GET("/refresh", server.AuthService.Refresh)
 
 	group := route.Group("/group")

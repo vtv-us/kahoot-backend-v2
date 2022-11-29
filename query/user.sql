@@ -27,10 +27,16 @@ ORDER BY user_id
 LIMIT $1
 OFFSET $2;
 
--- name: UpdatePassword :one
+-- name: UpdatePasswordByEmail :one
 UPDATE "user"
 SET password = $2
 WHERE email = $1
+RETURNING *;
+
+-- name: UpdatePassword :one
+UPDATE "user"
+SET password = $2
+WHERE user_id = $1
 RETURNING *;
 
 -- name: Verify :one

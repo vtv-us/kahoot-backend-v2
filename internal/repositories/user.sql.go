@@ -199,17 +199,47 @@ func (q *Queries) UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams
 const updatePassword = `-- name: UpdatePassword :one
 UPDATE "user"
 SET password = $2
-WHERE email = $1
+WHERE user_id = $1
 RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
 `
 
 type UpdatePasswordParams struct {
-	Email    string `json:"email"`
+	UserID   string `json:"user_id"`
 	Password string `json:"password"`
 }
 
 func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updatePassword, arg.Email, arg.Password)
+	row := q.db.QueryRowContext(ctx, updatePassword, arg.UserID, arg.Password)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Email,
+		&i.Name,
+		&i.Password,
+		&i.Verified,
+		&i.VerifiedCode,
+		&i.CreatedAt,
+		&i.GoogleID,
+		&i.FacebookID,
+		&i.AvatarUrl,
+	)
+	return i, err
+}
+
+const updatePasswordByEmail = `-- name: UpdatePasswordByEmail :one
+UPDATE "user"
+SET password = $2
+WHERE email = $1
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
+`
+
+type UpdatePasswordByEmailParams struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (q *Queries) UpdatePasswordByEmail(ctx context.Context, arg UpdatePasswordByEmailParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updatePasswordByEmail, arg.Email, arg.Password)
 	var i User
 	err := row.Scan(
 		&i.UserID,

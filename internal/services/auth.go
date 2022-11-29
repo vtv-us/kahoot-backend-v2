@@ -213,10 +213,11 @@ func (s *AuthService) LoginProvider(ctx *gin.Context) {
 }
 
 type providerResponse struct {
-	AccessToken string `json:"access_token"`
-	UserID      string `json:"user_id"`
-	Email       string `json:"email"`
-	Name        string `json:"name"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	UserID       string `json:"user_id"`
+	Email        string `json:"email"`
+	Name         string `json:"name"`
 }
 
 func (s *AuthService) ProviderCallback(ctx *gin.Context) {
@@ -278,11 +279,24 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 		}
 	}
 
+	accessToken, err := s.JWT.GenerateToken(user.User, s.Config.AccessTokenExpiredTime)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	refreshToken, err := s.JWT.GenerateToken(user.User, s.Config.RefreshTokenExpiredTime)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
 	rsp := providerResponse{
-		AccessToken: gUser.AccessToken,
-		UserID:      user.UserID,
-		Email:       user.Email,
-		Name:        user.Name,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		UserID:       user.UserID,
+		Email:        user.Email,
+		Name:         user.Name,
 	}
 
 	ctx.JSON(http.StatusOK, rsp)
@@ -367,4 +381,56 @@ func (s *AuthService) ResendEmail(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "email sent",
 	})
+}
+
+type changePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+func (s *AuthService) ChangePassword(ctx *gin.Context) {
+	userID := ctx.GetString(constants.Token_USER_ID)
+	var req changePasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUser(ctx, userID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	if !user.Verified {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not verified")))
+		return
+	}
+
+	if user.Password != "" {
+		if err := utils.CheckPassword(req.OldPassword, user.Password); err != nil {
+			ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("wrong password")))
+			return
+		}
+	}
+
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+	user, err = s.DB.UpdatePassword(ctx, repositories.UpdatePasswordParams{
+		UserID:   userID,
+		Password: hashedPassword,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
 }
