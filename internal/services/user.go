@@ -133,3 +133,37 @@ func (s *UserService) UpdateProfile(ctx *gin.Context) {
 		},
 	})
 }
+
+type getProfileByUserIDRequest struct {
+	UserID string `uri:"userid" binding:"required"`
+}
+
+type getProfileByUserIDResponse struct {
+	User userResponse `json:"user"`
+}
+
+func (s *UserService) GetProfileByUserID(ctx *gin.Context) {
+	var req getProfileByUserIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUser(ctx, req.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, getProfileByUserIDResponse{
+		User: userResponse{
+			UserID:     user.UserID,
+			Name:       user.Name,
+			Email:      user.Email,
+			AvatarUrl:  user.AvatarUrl,
+			Verified:   user.Verified,
+			GoogleID:   user.GoogleID.String,
+			FacebookID: user.FacebookID.String,
+		},
+	})
+}

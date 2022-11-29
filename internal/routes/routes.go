@@ -44,6 +44,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	user := route.Group("/user")
 	user.Use(a.AuthRequired)
 	user.GET("/profile", server.UserService.GetProfile)
+	user.GET("/profile/:userid", server.UserService.GetProfileByUserID)
 	user.POST("/profile", server.UserService.UpdateProfile)
 	user.POST("/avatar", server.UserService.UploadAvatar)
 
