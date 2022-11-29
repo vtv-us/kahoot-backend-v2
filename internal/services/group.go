@@ -135,7 +135,22 @@ func (s *GroupService) ShowGroupMember(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, members)
+	// sort by role
+	// owner -> co-owner -> member
+	owner := []repositories.ListMemberInGroupRow{}
+	coOwner := []repositories.ListMemberInGroupRow{}
+	member := []repositories.ListMemberInGroupRow{}
+	for _, m := range members {
+		if m.Role == constants.Role_OWNER {
+			owner = append(owner, m)
+		} else if m.Role == constants.Role_CO_OWNER {
+			coOwner = append(coOwner, m)
+		} else {
+			member = append(member, m)
+		}
+	}
+
+	ctx.JSON(http.StatusOK, append(append(owner, coOwner...), member...))
 }
 
 type assignRoleRequest struct {
