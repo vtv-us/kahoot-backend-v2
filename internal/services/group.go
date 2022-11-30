@@ -395,12 +395,12 @@ func (s *GroupService) InviteMember(ctx *gin.Context) {
 	user, err := s.DB.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(fmt.Errorf("this email is not registered, we will send an invitation email to this email")))
 			err = s.EmailService.SendEmailForInvite(req.Email, req.GroupID, group.GroupName, inviter.Name, inviter.UserID)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(fmt.Errorf("can't send email")))
 				return
 			}
+			ctx.JSON(http.StatusOK, utils.ResponseWithMessage("this email is not registered, we will send an invitation email to this email"))
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))

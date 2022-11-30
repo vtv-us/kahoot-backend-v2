@@ -9,3 +9,7 @@ func ErrorResponse(err error) gin.H {
 func SuccessResponse() gin.H {
 	return gin.H{"message": "success"}
 }
+
+func ResponseWithMessage(message string) gin.H {
+	return gin.H{"message": message}
+}
