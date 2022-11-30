@@ -317,6 +317,36 @@ func (q *Queries) UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) 
 	return i, err
 }
 
+const updateVerifiedCode = `-- name: UpdateVerifiedCode :one
+UPDATE "user"
+SET verified_code = $2
+WHERE user_id = $1
+RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
+`
+
+type UpdateVerifiedCodeParams struct {
+	UserID       string `json:"user_id"`
+	VerifiedCode string `json:"verified_code"`
+}
+
+func (q *Queries) UpdateVerifiedCode(ctx context.Context, arg UpdateVerifiedCodeParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateVerifiedCode, arg.UserID, arg.VerifiedCode)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Email,
+		&i.Name,
+		&i.Password,
+		&i.Verified,
+		&i.VerifiedCode,
+		&i.CreatedAt,
+		&i.GoogleID,
+		&i.FacebookID,
+		&i.AvatarUrl,
+	)
+	return i, err
+}
+
 const verify = `-- name: Verify :one
 UPDATE "user"
 SET verified = true

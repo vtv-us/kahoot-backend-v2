@@ -23,6 +23,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 
 	route.GET("/auth/:provider", server.AuthService.LoginProvider)
 	route.GET("/auth/:provider/callback", server.AuthService.ProviderCallback)
+	route.GET("/auth/callback/:user_id/:code", server.AuthService.LoginCallback)
 
 	auth := route.Group("/auth")
 	auth.Use(a.AuthRequired)
@@ -55,7 +56,7 @@ func InitRoutes(server *services.Server) *gin.Engine {
 
 func InitGoth(config *utils.Config) {
 	goth.UseProviders(
-		facebook.New(config.FBKey, config.FBSecret, config.FrontendAddress+"/auth/facebook/callback"),
-		google.New(config.GGKey, config.GGSecret, config.FrontendAddress+"/auth/google/callback"),
+		facebook.New(config.FBKey, config.FBSecret, config.ServerAddress+"/auth/facebook/callback"),
+		google.New(config.GGKey, config.GGSecret, config.ServerAddress+"/auth/google/callback"),
 	)
 }

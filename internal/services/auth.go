@@ -238,14 +238,17 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 			return
 		}
 	}
+
+	verifyCode := uuid.NewString()
 	// if not, create new user
 	if !exist {
 		arg := repositories.CreateUserParams{
-			UserID:   uuid.NewString(),
-			Email:    gUser.Email,
-			Name:     gUser.Name,
-			Password: "",
-			Verified: true,
+			UserID:       uuid.NewString(),
+			Email:        gUser.Email,
+			Name:         gUser.Name,
+			Password:     "",
+			Verified:     true,
+			VerifiedCode: verifyCode,
 		}
 		provider := ctx.Param("provider")
 		if provider == "google" {
@@ -277,6 +280,47 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 			return
 		}
+		user, err = s.DB.UpdateVerifiedCode(ctx, repositories.UpdateVerifiedCodeParams{
+			UserID:       user.UserID,
+			VerifiedCode: verifyCode,
+		})
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+			return
+		}
+	}
+
+	ctx.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/auth/callback/%s/%s", s.Config.FrontendAddress, user.UserID, verifyCode))
+}
+
+type loginCallbackRequest struct {
+	UserID string `uri:"user_id"`
+	Code   string `uri:"code"`
+}
+
+type loginCallbackResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	UserID       string `json:"user_id"`
+	Email        string `json:"email"`
+	Name         string `json:"name"`
+}
+
+func (s *AuthService) LoginCallback(ctx *gin.Context) {
+	var req loginCallbackRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUser(ctx, req.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+	if user.VerifiedCode != req.Code {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("invalid code")))
+		return
 	}
 
 	accessToken, err := s.JWT.GenerateToken(user.User, s.Config.AccessTokenExpiredTime)
@@ -291,14 +335,13 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 		return
 	}
 
-	rsp := providerResponse{
+	rsp := loginCallbackResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		UserID:       user.UserID,
 		Email:        user.Email,
 		Name:         user.Name,
 	}
-
 	ctx.JSON(http.StatusOK, rsp)
 }
 

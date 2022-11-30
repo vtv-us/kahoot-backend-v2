@@ -51,6 +51,12 @@ SET google_id = $2, facebook_id = $3
 WHERE email = $1
 RETURNING *;
 
+-- name: UpdateVerifiedCode :one
+UPDATE "user"
+SET verified_code = $2
+WHERE user_id = $1
+RETURNING *;
+
 -- name: UpdateAvatarUrl :one
 UPDATE "user"
 SET avatar_url = $2

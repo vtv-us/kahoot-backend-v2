@@ -33,6 +33,7 @@ type Querier interface {
 	UpdatePasswordByEmail(ctx context.Context, arg UpdatePasswordByEmailParams) (User, error)
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) (User, error)
 	UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) (User, error)
+	UpdateVerifiedCode(ctx context.Context, arg UpdateVerifiedCodeParams) (User, error)
 	Verify(ctx context.Context, email string) (User, error)
 }
 
