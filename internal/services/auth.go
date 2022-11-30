@@ -298,14 +298,6 @@ type loginCallbackRequest struct {
 	Code   string `uri:"code"`
 }
 
-type loginCallbackResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	UserID       string `json:"user_id"`
-	Email        string `json:"email"`
-	Name         string `json:"name"`
-}
-
 func (s *AuthService) LoginCallback(ctx *gin.Context) {
 	var req loginCallbackRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -335,12 +327,18 @@ func (s *AuthService) LoginCallback(ctx *gin.Context) {
 		return
 	}
 
-	rsp := loginCallbackResponse{
+	rsp := loginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		UserID:       user.UserID,
-		Email:        user.Email,
-		Name:         user.Name,
+		User: userResponse{
+			UserID:     user.UserID,
+			Email:      user.Email,
+			Name:       user.Name,
+			AvatarUrl:  user.AvatarUrl,
+			Verified:   user.Verified,
+			GoogleID:   user.GoogleID.String,
+			FacebookID: user.FacebookID.String,
+		},
 	}
 	ctx.JSON(http.StatusOK, rsp)
 }
