@@ -212,14 +212,6 @@ func (s *AuthService) LoginProvider(ctx *gin.Context) {
 	}
 }
 
-type providerResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	UserID       string `json:"user_id"`
-	Email        string `json:"email"`
-	Name         string `json:"name"`
-}
-
 func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 	gUser, err := gothic.CompleteAuth(ctx.Param("provider"), ctx.Writer, ctx.Request)
 	if err != nil {

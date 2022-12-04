@@ -25,8 +25,16 @@ func main() {
 	store := db.NewStore(conn)
 	server := services.NewServer(store, &c)
 
+	// socket := services.InitSocketServer()
+
 	routes.InitGoth(&c)
-	route := routes.InitRoutes(server)
+	route := routes.InitRoutes(server, nil)
+	// go func() {
+	// 	if err := socket.Serve(); err != nil {
+	// 		log.Fatalf("socketio listen error: %s\n", err)
+	// 	}
+	// }()
+	// defer socket.Close()
 
 	address := fmt.Sprintf(":%v", c.Port)
 	err = route.Run(address)

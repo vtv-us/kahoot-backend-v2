@@ -12,11 +12,20 @@ type Querier interface {
 	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
 	CheckUserInGroup(ctx context.Context, arg CheckUserInGroupParams) (bool, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
+	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error)
+	CreateSlide(ctx context.Context, arg CreateSlideParams) (Slide, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteGroup(ctx context.Context, groupID string) error
+	DeleteQuestion(ctx context.Context, id string) error
+	DeleteSlide(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, email string) error
 	GetGroup(ctx context.Context, groupID string) (Group, error)
+	GetOwnerOfQuestion(ctx context.Context, id string) (string, error)
+	GetQuestion(ctx context.Context, id string) (Question, error)
+	GetQuestionsBySlide(ctx context.Context, slideID string) ([]Question, error)
 	GetRoleInGroup(ctx context.Context, arg GetRoleInGroupParams) (string, error)
+	GetSlide(ctx context.Context, id string) (Slide, error)
+	GetSlidesByOwner(ctx context.Context, owner string) ([]Slide, error)
 	GetUser(ctx context.Context, userID string) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserGroup(ctx context.Context, arg GetUserGroupParams) (UserGroup, error)
@@ -32,6 +41,8 @@ type Querier interface {
 	UpdatePassword(ctx context.Context, arg UpdatePasswordParams) (User, error)
 	UpdatePasswordByEmail(ctx context.Context, arg UpdatePasswordByEmailParams) (User, error)
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) (User, error)
+	UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error)
+	UpdateSlide(ctx context.Context, arg UpdateSlideParams) (Slide, error)
 	UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) (User, error)
 	UpdateVerifiedCode(ctx context.Context, arg UpdateVerifiedCodeParams) (User, error)
 	Verify(ctx context.Context, email string) (User, error)

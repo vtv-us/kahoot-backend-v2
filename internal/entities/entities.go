@@ -17,6 +17,28 @@ type Group struct {
 	Description string    `json:"description"`
 }
 
+type Question struct {
+	ID            string    `json:"id"`
+	SlideID       string    `json:"slide_id"`
+	RawQuestion   string    `json:"raw_question"`
+	AnswerA       string    `json:"answer_a"`
+	AnswerB       string    `json:"answer_b"`
+	AnswerC       string    `json:"answer_c"`
+	AnswerD       string    `json:"answer_d"`
+	CorrectAnswer string    `json:"correct_answer"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type Slide struct {
+	ID        string    `json:"id"`
+	Owner     string    `json:"owner"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type User struct {
 	UserID       string         `json:"user_id"`
 	Email        string         `json:"email"`

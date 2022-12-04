@@ -8,9 +8,11 @@ import (
 )
 
 type Server struct {
-	AuthService  *AuthService
-	GroupService *GroupService
-	UserService  *UserService
+	AuthService     *AuthService
+	GroupService    *GroupService
+	UserService     *UserService
+	SlideService    *SlideService
+	QuestionService *QuestionService
 }
 
 func NewServer(store repositories.Store, c *utils.Config) *Server {
@@ -28,10 +30,14 @@ func NewServer(store repositories.Store, c *utils.Config) *Server {
 	authService := NewAuthService(store, &emailSvc, &jwt, c)
 	groupService := NewGroupService(store, &emailSvc, c)
 	userService := NewUserService(store, &cloudinarySvc, c)
+	slideService := NewSlideService(store, c)
+	questionService := NewQuestionService(store, c)
 
 	return &Server{
-		AuthService:  authService,
-		GroupService: groupService,
-		UserService:  userService,
+		AuthService:     authService,
+		GroupService:    groupService,
+		UserService:     userService,
+		SlideService:    slideService,
+		QuestionService: questionService,
 	}
 }

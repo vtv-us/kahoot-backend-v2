@@ -13,4 +13,7 @@ const (
 	UserGroupStatus_DECLINED = "declined"
 
 	Cookies_ACCESS_TOKEN = "cookieAccess"
+
+	SocketParticipantStatus_ACTIVE = "active"
+	SocketParticipantStatus_LEFT   = "left"
 )

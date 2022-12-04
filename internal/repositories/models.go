@@ -15,3 +15,11 @@ type Group struct {
 type UserGroup struct {
 	entities.UserGroup
 }
+
+type Slide struct {
+	entities.Slide
+}
+
+type Question struct {
+	entities.Question
+}

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	socketio "github.com/googollee/go-socket.io"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/google"
@@ -9,7 +10,8 @@ import (
 	"github.com/vtv-us/kahoot-backend/internal/utils"
 )
 
-func InitRoutes(server *services.Server) *gin.Engine {
+func InitRoutes(server *services.Server, socket *socketio.Server) *gin.Engine {
+	// gin.SetMode(gin.ReleaseMode)
 	route := gin.Default()
 	a := services.InitAuthMiddleware(server.AuthService)
 	route.Use(a.CORSMiddleware)
@@ -50,6 +52,26 @@ func InitRoutes(server *services.Server) *gin.Engine {
 	user.GET("/profile/:userid", server.UserService.GetProfileByUserID)
 	user.POST("/profile", server.UserService.UpdateProfile)
 	user.POST("/avatar", server.UserService.UploadAvatar)
+
+	slide := route.Group("/slide")
+	slide.Use(a.AuthRequired)
+	slide.POST("/", server.SlideService.CreateSlide)
+	slide.GET("/", server.SlideService.GetSlideByUserID)
+	slide.PUT("/", server.SlideService.UpdateSlide)
+	slide.DELETE("/:slide_id", server.SlideService.DeleteSlide)
+
+	question := route.Group("/question")
+	question.Use(a.AuthRequired)
+	question.POST("/", server.QuestionService.CreateQuestion)
+	question.GET("/:slide_id", server.QuestionService.GetQuestionBySlideID)
+	question.PUT("/", server.QuestionService.UpdateQuestion)
+	question.DELETE("/:question_id", server.QuestionService.DeleteQuestion)
+
+	// route.GET("/socket.io/*any", gin.WrapH(socket))
+	// route.POST("/socket.io/*any", gin.WrapH(socket))
+	// route.GET("/test", func(c *gin.Context) {
+	// 	http.ServeFile(c.Writer, c.Request, "index.html")
+	// })
 
 	return route
 }
