@@ -55,6 +55,7 @@ func InitRoutes(server *services.Server, socket *socketio.Server) *gin.Engine {
 
 	slide := route.Group("/slide")
 	slide.Use(a.AuthRequired)
+	slide.Use(a.CORSMiddleware)
 	slide.POST("/", server.SlideService.CreateSlide)
 	slide.GET("/", server.SlideService.GetSlideByUserID)
 	slide.PUT("/", server.SlideService.UpdateSlide)
@@ -62,6 +63,7 @@ func InitRoutes(server *services.Server, socket *socketio.Server) *gin.Engine {
 
 	question := route.Group("/question")
 	question.Use(a.AuthRequired)
+	slide.Use(a.CORSMiddleware)
 	question.POST("/", server.QuestionService.CreateQuestion)
 	question.GET("/:slide_id", server.QuestionService.GetQuestionBySlideID)
 	question.PUT("/", server.QuestionService.UpdateQuestion)
