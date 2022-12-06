@@ -22,7 +22,7 @@ func (c *AuthMiddlewareConfig) AuthRequired(ctx *gin.Context) {
 	authorization := ctx.Request.Header.Get("authorization")
 
 	if authorization == "" {
-		ctx.AbortWithStatus(http.StatusUnauthorized)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, utils.ErrorResponse(fmt.Errorf("authorization header is empty")))
 		return
 	}
 
@@ -57,5 +57,4 @@ func (c *AuthMiddlewareConfig) CORSMiddleware(ctx *gin.Context) {
 	}
 
 	ctx.Next()
-
 }
