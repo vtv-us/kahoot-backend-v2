@@ -26,8 +26,8 @@ func NewQuestionService(db repositories.Store, c *utils.Config) *QuestionService
 type createQuestionRequest struct {
 	SlideID         string `json:"slide_id" binding:"required"`
 	RawQuestion     string `json:"raw_question" binding:"required"`
-	Meta            string `json:"meta" binding:"required"`
-	LongDescription string `json:"long_description" binding:"required"`
+	Meta            string `json:"meta"`
+	LongDescription string `json:"long_description"`
 }
 
 func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
