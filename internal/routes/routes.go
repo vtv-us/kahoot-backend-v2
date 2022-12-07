@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	socketio "github.com/googollee/go-socket.io"
 	"github.com/markbates/goth"
@@ -77,11 +79,11 @@ func InitRoutes(server *services.Server, socket *socketio.Server) *gin.Engine {
 	answer.PUT("", server.AnswerService.UpdateAnswer)
 	answer.DELETE("/:answer_id", server.AnswerService.DeleteAnswer)
 
-	// route.GET("/socket.io/*any", gin.WrapH(socket))
-	// route.POST("/socket.io/*any", gin.WrapH(socket))
-	// route.GET("/test", func(c *gin.Context) {
-	// 	http.ServeFile(c.Writer, c.Request, "index.html")
-	// })
+	route.GET("/socket.io/*any", gin.WrapH(socket))
+	route.POST("/socket.io/*any", gin.WrapH(socket))
+	route.GET("/test", func(c *gin.Context) {
+		http.ServeFile(c.Writer, c.Request, "index.html")
+	})
 
 	return route
 }

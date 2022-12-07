@@ -12,7 +12,7 @@ type Participant struct {
 	IsTeacher bool
 	Status    string
 	SID       string
-	Score     []int
+	Answer    map[int]string
 }
 
 // [ID] -> List of participants
@@ -52,45 +52,75 @@ func InitSocketServer() *socketio.Server {
 
 	server.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
 		fmt.Println("host:", roomID)
-		room[roomID] = append(room[roomID], Participant{
-			IsTeacher: true,
-			Username:  username,
-			Status:    constants.SocketParticipantStatus_ACTIVE,
-			SID:       s.ID(),
-		})
-		fmt.Println(room)
+		exist := checkExistInRoom(username, roomID)
+		if exist {
+			for i, participant := range room[roomID] {
+				if participant.Username == username {
+					room[roomID][i].Status = constants.SocketParticipantStatus_ACTIVE
+					room[roomID][i].SID = s.ID()
+				}
+			}
+		} else {
+			room[roomID] = append(room[roomID], Participant{
+				IsTeacher: true,
+				Username:  username,
+				Status:    constants.SocketParticipantStatus_ACTIVE,
+				SID:       s.ID(),
+			})
+		}
 		s.Join(roomID)
 	})
 
 	server.OnEvent("/", "join", func(s socketio.Conn, username, roomID string) {
 		fmt.Println(s.ID(), "join room", roomID)
+		exist := checkExistInRoom(username, roomID)
+		if exist {
+			for i, participant := range room[roomID] {
+				if participant.Username == username {
+					if participant.Status == constants.SocketParticipantStatus_ACTIVE {
+						s.Emit("error", "You are already in the room")
+						return
+					}
+					room[roomID][i].Status = constants.SocketParticipantStatus_ACTIVE
+					room[roomID][i].SID = s.ID()
+				}
+			}
+		} else {
+			room[roomID] = append(room[roomID], Participant{
+				IsTeacher: false,
+				Username:  username,
+				Status:    constants.SocketParticipantStatus_ACTIVE,
+				SID:       s.ID(),
+			})
+		}
 		s.Join(roomID)
-		room[roomID] = append(room[roomID], Participant{
-			IsTeacher: false,
-			Username:  username,
-			Status:    constants.SocketParticipantStatus_ACTIVE,
-			SID:       s.ID(),
-		})
 	})
 
-	server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
-		fmt.Println("notice:", msg)
-		s.Emit("reply", "have "+msg)
-		// reply to another connection
-		s.Join("chat")
-		server.BroadcastToRoom("/", "chat", "notice", "notice from server")
+	server.OnEvent("/", "submitAnswer", func(s socketio.Conn, username, roomID string, question int, answer string) {
+		fmt.Println("submitAnswer:", username, roomID, answer)
+		for i, participant := range room[roomID] {
+			if participant.Username == username {
+				if participant.Answer == nil {
+					participant.Answer = make(map[int]string)
+				}
+				participant.Answer[question] = answer
+				room[roomID][i] = participant
+			}
+		}
 	})
 
-	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
-		s.SetContext(msg)
-		return "recv " + msg
-	})
-
-	server.OnEvent("/", "bye", func(s socketio.Conn) string {
-		last := s.Context().(string)
-		s.Emit("bye", last)
-		s.Close()
-		return last
+	server.OnEvent("/", "showStatistic", func(s socketio.Conn, roomID string, question int) {
+		// count answer
+		count := make(map[string]int)
+		for _, participant := range room[roomID] {
+			if participant.Answer != nil {
+				if participant.Answer[question] != "" {
+					count[participant.Answer[question]]++
+				}
+			}
+		}
+		// send to all participants
+		server.BroadcastToRoom("/", roomID, "showStatistic", count)
 	})
 
 	server.OnError("/", func(s socketio.Conn, e error) {
@@ -121,6 +151,27 @@ func InitSocketServer() *socketio.Server {
 				delete(room, id)
 			}
 		}
+	})
+
+	server.OnConnect("/chat", func(s socketio.Conn) error {
+		return nil
+	})
+
+	server.OnEvent("/chat", "join", func(s socketio.Conn, username, roomID string) {
+		fmt.Println("chat join:", username, roomID)
+		s.Join(roomID)
+		s.SetContext(username)
+	})
+
+	server.OnEvent("/chat", "send", func(s socketio.Conn, msg string) {
+		username := s.Context().(string)
+		fmt.Println("chat send:", username, msg)
+		s.Emit("reply", username, msg)
+	})
+
+	server.OnError("/chat", func(s socketio.Conn, e error) {
+		fmt.Println("meet error:", e)
+		s.Emit("error", e)
 	})
 
 	return server

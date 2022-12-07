@@ -63,6 +63,17 @@
       socket.on("getActiveParticipants", function (msg) {
         console.log(msg);
       });
+      socket.on("showStatistic", function (msg) {
+        console.log(msg);
+      });
+
+      s2.on("reply", function (msg) {
+        console.log(msg);
+      });
+      s2.on("error", function (err) {
+        console.log("received s2 error:");
+        console.log(err);
+      });
 
       socket.on("reply", function (msg) {
         $("#messages").append($("<li>").text(msg));
