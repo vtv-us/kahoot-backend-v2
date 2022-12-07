@@ -95,8 +95,8 @@ func (s *QuestionService) GetQuestionByID(ctx *gin.Context) {
 type updateQuestionRequest struct {
 	QuestionID      string `json:"question_id" binding:"required"`
 	RawQuestion     string `json:"raw_question" binding:"required"`
-	Meta            string `json:"meta" binding:"required"`
-	LongDescription string `json:"long_description" binding:"required"`
+	Meta            string `json:"meta"`
+	LongDescription string `json:"long_description"`
 }
 
 func (s *QuestionService) UpdateQuestion(ctx *gin.Context) {
