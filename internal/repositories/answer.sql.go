@@ -63,6 +63,26 @@ func (q *Queries) DeleteAnswer(ctx context.Context, id string) error {
 	return err
 }
 
+const deleteAnswersByQuestion = `-- name: DeleteAnswersByQuestion :exec
+DELETE FROM "answer" WHERE question_id = $1
+`
+
+func (q *Queries) DeleteAnswersByQuestion(ctx context.Context, questionID string) error {
+	_, err := q.db.ExecContext(ctx, deleteAnswersByQuestion, questionID)
+	return err
+}
+
+const deleteAnswersBySlide = `-- name: DeleteAnswersBySlide :exec
+DELETE FROM "answer" WHERE question_id IN (
+    SELECT id FROM "question" WHERE slide_id = $1
+)
+`
+
+func (q *Queries) DeleteAnswersBySlide(ctx context.Context, slideID string) error {
+	_, err := q.db.ExecContext(ctx, deleteAnswersBySlide, slideID)
+	return err
+}
+
 const getAnswer = `-- name: GetAnswer :one
 SELECT id, question_id, index, raw_answer, created_at, updated_at FROM "answer" WHERE id = $1
 `

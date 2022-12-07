@@ -40,3 +40,6 @@ RETURNING *;
 
 -- name: DeleteQuestion :exec
 DELETE FROM "question" WHERE id = $1;
+
+-- name: DeleteQuestionsBySlide :exec
+DELETE FROM "question" WHERE slide_id = $1;

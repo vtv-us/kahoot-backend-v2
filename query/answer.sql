@@ -32,3 +32,11 @@ RETURNING *;
 
 -- name: DeleteAnswer :exec
 DELETE FROM "answer" WHERE id = $1;
+
+-- name: DeleteAnswersByQuestion :exec
+DELETE FROM "answer" WHERE question_id = $1;
+
+-- name: DeleteAnswersBySlide :exec
+DELETE FROM "answer" WHERE question_id IN (
+    SELECT id FROM "question" WHERE slide_id = $1
+);

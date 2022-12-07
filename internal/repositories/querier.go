@@ -17,8 +17,11 @@ type Querier interface {
 	CreateSlide(ctx context.Context, arg CreateSlideParams) (Slide, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAnswer(ctx context.Context, id string) error
+	DeleteAnswersByQuestion(ctx context.Context, questionID string) error
+	DeleteAnswersBySlide(ctx context.Context, slideID string) error
 	DeleteGroup(ctx context.Context, groupID string) error
 	DeleteQuestion(ctx context.Context, id string) error
+	DeleteQuestionsBySlide(ctx context.Context, slideID string) error
 	DeleteSlide(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, email string) error
 	GetAnswer(ctx context.Context, id string) (Answer, error)

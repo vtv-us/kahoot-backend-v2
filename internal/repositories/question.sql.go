@@ -68,6 +68,15 @@ func (q *Queries) DeleteQuestion(ctx context.Context, id string) error {
 	return err
 }
 
+const deleteQuestionsBySlide = `-- name: DeleteQuestionsBySlide :exec
+DELETE FROM "question" WHERE slide_id = $1
+`
+
+func (q *Queries) DeleteQuestionsBySlide(ctx context.Context, slideID string) error {
+	_, err := q.db.ExecContext(ctx, deleteQuestionsBySlide, slideID)
+	return err
+}
+
 const getOwnerOfQuestion = `-- name: GetOwnerOfQuestion :one
 SELECT s.owner FROM "question" q
 JOIN "slide" s ON q.slide_id = s.id
