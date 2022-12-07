@@ -17,6 +17,7 @@ type Participant struct {
 
 // [ID] -> List of participants
 type Room map[string][]Participant
+type RoomState map[string]int
 
 var room Room
 
@@ -25,6 +26,7 @@ func InitSocketServer() *socketio.Server {
 	server := socketio.NewServer(nil)
 
 	room = make(Room)
+	roomState := make(RoomState)
 
 	server.OnConnect("/", func(s socketio.Conn) error {
 		fmt.Println("connected:", s.ID())
@@ -52,6 +54,7 @@ func InitSocketServer() *socketio.Server {
 
 	server.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
 		fmt.Println("host:", roomID)
+		roomState[roomID] = 1
 		exist := checkExistInRoom(username, roomID)
 		if exist {
 			for i, participant := range room[roomID] {
@@ -69,6 +72,23 @@ func InitSocketServer() *socketio.Server {
 			})
 		}
 		s.Join(roomID)
+	})
+
+	server.OnEvent("/", "getRoomState", func(s socketio.Conn, roomID string) {
+		if _, ok := roomState[roomID]; !ok {
+			roomState[roomID] = 0
+		}
+		s.Emit("getRoomState", roomState[roomID])
+	})
+
+	server.OnEvent("/", "next", func(s socketio.Conn, roomID string) {
+		roomState[roomID]++
+		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+	})
+
+	server.OnEvent("/", "prev", func(s socketio.Conn, roomID string) {
+		roomState[roomID]--
+		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
 	})
 
 	server.OnEvent("/", "join", func(s socketio.Conn, username, roomID string) {

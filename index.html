@@ -66,6 +66,9 @@
       socket.on("showStatistic", function (msg) {
         console.log(msg);
       });
+      socket.on("getRoomState", function (msg) {
+        console.log(msg);
+      });
 
       s2.on("reply", function (msg) {
         console.log(msg);
