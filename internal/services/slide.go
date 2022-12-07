@@ -63,6 +63,26 @@ func (s *SlideService) GetSlideByUserID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, slides)
 }
 
+type getSlideByIDRequest struct {
+	SlideID string `uri:"slide_id" binding:"required"`
+}
+
+func (s *SlideService) GetSlideByID(ctx *gin.Context) {
+	var req getSlideByIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	slide, err := s.DB.GetSlide(ctx, req.SlideID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, slide)
+}
+
 type updateSlideRequest struct {
 	SlideID string `json:"slide_id" binding:"required"`
 	Title   string `json:"title" binding:"required"`

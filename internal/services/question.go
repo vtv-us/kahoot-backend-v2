@@ -24,13 +24,10 @@ func NewQuestionService(db repositories.Store, c *utils.Config) *QuestionService
 }
 
 type createQuestionRequest struct {
-	SlideID       string `json:"slide_id" binding:"required"`
-	RawQuestion   string `json:"raw_question" binding:"required"`
-	AnswerA       string `json:"answer_a" binding:"required"`
-	AnswerB       string `json:"answer_b" binding:"required"`
-	AnswerC       string `json:"answer_c" binding:"required"`
-	AnswerD       string `json:"answer_d" binding:"required"`
-	CorrectAnswer string `json:"correct_answer" binding:"required,oneof=A B C D"`
+	SlideID         string `json:"slide_id" binding:"required"`
+	RawQuestion     string `json:"raw_question" binding:"required"`
+	Meta            string `json:"meta" binding:"required"`
+	LongDescription string `json:"long_description" binding:"required"`
 }
 
 func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
@@ -41,14 +38,11 @@ func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
 	}
 
 	question, err := s.DB.CreateQuestion(ctx, repositories.CreateQuestionParams{
-		ID:            uuid.NewString(),
-		SlideID:       req.SlideID,
-		RawQuestion:   req.RawQuestion,
-		AnswerA:       req.AnswerA,
-		AnswerB:       req.AnswerB,
-		AnswerC:       req.AnswerC,
-		AnswerD:       req.AnswerD,
-		CorrectAnswer: req.CorrectAnswer,
+		ID:              uuid.NewString(),
+		SlideID:         req.SlideID,
+		RawQuestion:     req.RawQuestion,
+		Meta:            req.Meta,
+		LongDescription: req.LongDescription,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
@@ -78,14 +72,31 @@ func (s *QuestionService) GetQuestionBySlideID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, question)
 }
 
+type getQuestionByIDRequest struct {
+	QuestionID string `uri:"question_id" binding:"required"`
+}
+
+func (s *QuestionService) GetQuestionByID(ctx *gin.Context) {
+	var req getQuestionByIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	question, err := s.DB.GetQuestion(ctx, req.QuestionID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, question)
+}
+
 type updateQuestionRequest struct {
-	QuestionID    string `json:"question_id" binding:"required"`
-	RawQuestion   string `json:"raw_question" binding:"required"`
-	AnswerA       string `json:"answer_a" binding:"required"`
-	AnswerB       string `json:"answer_b" binding:"required"`
-	AnswerC       string `json:"answer_c" binding:"required"`
-	AnswerD       string `json:"answer_d" binding:"required"`
-	CorrectAnswer string `json:"correct_answer" binding:"required,oneof=A B C D"`
+	QuestionID      string `json:"question_id" binding:"required"`
+	RawQuestion     string `json:"raw_question" binding:"required"`
+	Meta            string `json:"meta" binding:"required"`
+	LongDescription string `json:"long_description" binding:"required"`
 }
 
 func (s *QuestionService) UpdateQuestion(ctx *gin.Context) {
@@ -102,13 +113,10 @@ func (s *QuestionService) UpdateQuestion(ctx *gin.Context) {
 	}
 
 	question, err := s.DB.UpdateQuestion(ctx, repositories.UpdateQuestionParams{
-		ID:            req.QuestionID,
-		RawQuestion:   req.RawQuestion,
-		AnswerA:       req.AnswerA,
-		AnswerB:       req.AnswerB,
-		AnswerC:       req.AnswerC,
-		AnswerD:       req.AnswerD,
-		CorrectAnswer: req.CorrectAnswer,
+		ID:              req.QuestionID,
+		RawQuestion:     req.RawQuestion,
+		Meta:            req.Meta,
+		LongDescription: req.LongDescription,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))

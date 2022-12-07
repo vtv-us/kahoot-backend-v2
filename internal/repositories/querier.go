@@ -11,14 +11,18 @@ import (
 type Querier interface {
 	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
 	CheckUserInGroup(ctx context.Context, arg CheckUserInGroupParams) (bool, error)
+	CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error)
 	CreateSlide(ctx context.Context, arg CreateSlideParams) (Slide, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteAnswer(ctx context.Context, id string) error
 	DeleteGroup(ctx context.Context, groupID string) error
 	DeleteQuestion(ctx context.Context, id string) error
 	DeleteSlide(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, email string) error
+	GetAnswer(ctx context.Context, id string) (Answer, error)
+	GetAnswersByQuestion(ctx context.Context, questionID string) ([]Answer, error)
 	GetGroup(ctx context.Context, groupID string) (Group, error)
 	GetOwnerOfQuestion(ctx context.Context, id string) (string, error)
 	GetQuestion(ctx context.Context, id string) (Question, error)
@@ -35,6 +39,7 @@ type Querier interface {
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
+	UpdateAnswer(ctx context.Context, arg UpdateAnswerParams) (Answer, error)
 	UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error)
 	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error
 	UpdateMemberStatus(ctx context.Context, arg UpdateMemberStatusParams) error

@@ -9,6 +9,15 @@ import (
 	"time"
 )
 
+type Answer struct {
+	ID         string    `json:"id"`
+	QuestionID string    `json:"question_id"`
+	Index      int16     `json:"index"`
+	RawAnswer  string    `json:"raw_answer"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
 type Group struct {
 	GroupID     string    `json:"group_id"`
 	GroupName   string    `json:"group_name"`
@@ -18,16 +27,13 @@ type Group struct {
 }
 
 type Question struct {
-	ID            string    `json:"id"`
-	SlideID       string    `json:"slide_id"`
-	RawQuestion   string    `json:"raw_question"`
-	AnswerA       string    `json:"answer_a"`
-	AnswerB       string    `json:"answer_b"`
-	AnswerC       string    `json:"answer_c"`
-	AnswerD       string    `json:"answer_d"`
-	CorrectAnswer string    `json:"correct_answer"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID              string    `json:"id"`
+	SlideID         string    `json:"slide_id"`
+	RawQuestion     string    `json:"raw_question"`
+	Meta            string    `json:"meta"`
+	LongDescription string    `json:"long_description"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type Slide struct {

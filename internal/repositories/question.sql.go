@@ -14,32 +14,28 @@ INSERT INTO "question" (
     id,
     slide_id,
     raw_question,
-    answer_a,
-    answer_b,
-    answer_c,
-    answer_d,
-    correct_answer
+    meta,
+    long_description,
+    created_at,
+    updated_at
 ) VALUES (
     $1,
     $2,
     $3,
     $4,
     $5,
-    $6,
-    $7,
-    $8
-) RETURNING id, slide_id, raw_question, answer_a, answer_b, answer_c, answer_d, correct_answer, created_at, updated_at
+    now(),
+    now()
+)
+RETURNING id, slide_id, raw_question, meta, long_description, created_at, updated_at
 `
 
 type CreateQuestionParams struct {
-	ID            string `json:"id"`
-	SlideID       string `json:"slide_id"`
-	RawQuestion   string `json:"raw_question"`
-	AnswerA       string `json:"answer_a"`
-	AnswerB       string `json:"answer_b"`
-	AnswerC       string `json:"answer_c"`
-	AnswerD       string `json:"answer_d"`
-	CorrectAnswer string `json:"correct_answer"`
+	ID              string `json:"id"`
+	SlideID         string `json:"slide_id"`
+	RawQuestion     string `json:"raw_question"`
+	Meta            string `json:"meta"`
+	LongDescription string `json:"long_description"`
 }
 
 func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error) {
@@ -47,22 +43,16 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 		arg.ID,
 		arg.SlideID,
 		arg.RawQuestion,
-		arg.AnswerA,
-		arg.AnswerB,
-		arg.AnswerC,
-		arg.AnswerD,
-		arg.CorrectAnswer,
+		arg.Meta,
+		arg.LongDescription,
 	)
 	var i Question
 	err := row.Scan(
 		&i.ID,
 		&i.SlideID,
 		&i.RawQuestion,
-		&i.AnswerA,
-		&i.AnswerB,
-		&i.AnswerC,
-		&i.AnswerD,
-		&i.CorrectAnswer,
+		&i.Meta,
+		&i.LongDescription,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -92,7 +82,7 @@ func (q *Queries) GetOwnerOfQuestion(ctx context.Context, id string) (string, er
 }
 
 const getQuestion = `-- name: GetQuestion :one
-SELECT id, slide_id, raw_question, answer_a, answer_b, answer_c, answer_d, correct_answer, created_at, updated_at FROM "question" WHERE id = $1
+SELECT id, slide_id, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE id = $1
 `
 
 func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) {
@@ -102,11 +92,8 @@ func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) 
 		&i.ID,
 		&i.SlideID,
 		&i.RawQuestion,
-		&i.AnswerA,
-		&i.AnswerB,
-		&i.AnswerC,
-		&i.AnswerD,
-		&i.CorrectAnswer,
+		&i.Meta,
+		&i.LongDescription,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -114,7 +101,7 @@ func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) 
 }
 
 const getQuestionsBySlide = `-- name: GetQuestionsBySlide :many
-SELECT id, slide_id, raw_question, answer_a, answer_b, answer_c, answer_d, correct_answer, created_at, updated_at FROM "question" WHERE slide_id = $1
+SELECT id, slide_id, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE slide_id = $1
 `
 
 func (q *Queries) GetQuestionsBySlide(ctx context.Context, slideID string) ([]Question, error) {
@@ -130,11 +117,8 @@ func (q *Queries) GetQuestionsBySlide(ctx context.Context, slideID string) ([]Qu
 			&i.ID,
 			&i.SlideID,
 			&i.RawQuestion,
-			&i.AnswerA,
-			&i.AnswerB,
-			&i.AnswerC,
-			&i.AnswerD,
-			&i.CorrectAnswer,
+			&i.Meta,
+			&i.LongDescription,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -154,46 +138,34 @@ func (q *Queries) GetQuestionsBySlide(ctx context.Context, slideID string) ([]Qu
 const updateQuestion = `-- name: UpdateQuestion :one
 UPDATE "question" SET
     raw_question = $2,
-    answer_a = $3,
-    answer_b = $4,
-    answer_c = $5,
-    answer_d = $6,
-    correct_answer = $7,
+    meta = $3,
+    long_description = $4,
     updated_at = now()
 WHERE id = $1
-RETURNING id, slide_id, raw_question, answer_a, answer_b, answer_c, answer_d, correct_answer, created_at, updated_at
+RETURNING id, slide_id, raw_question, meta, long_description, created_at, updated_at
 `
 
 type UpdateQuestionParams struct {
-	ID            string `json:"id"`
-	RawQuestion   string `json:"raw_question"`
-	AnswerA       string `json:"answer_a"`
-	AnswerB       string `json:"answer_b"`
-	AnswerC       string `json:"answer_c"`
-	AnswerD       string `json:"answer_d"`
-	CorrectAnswer string `json:"correct_answer"`
+	ID              string `json:"id"`
+	RawQuestion     string `json:"raw_question"`
+	Meta            string `json:"meta"`
+	LongDescription string `json:"long_description"`
 }
 
 func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error) {
 	row := q.db.QueryRowContext(ctx, updateQuestion,
 		arg.ID,
 		arg.RawQuestion,
-		arg.AnswerA,
-		arg.AnswerB,
-		arg.AnswerC,
-		arg.AnswerD,
-		arg.CorrectAnswer,
+		arg.Meta,
+		arg.LongDescription,
 	)
 	var i Question
 	err := row.Scan(
 		&i.ID,
 		&i.SlideID,
 		&i.RawQuestion,
-		&i.AnswerA,
-		&i.AnswerB,
-		&i.AnswerC,
-		&i.AnswerD,
-		&i.CorrectAnswer,
+		&i.Meta,
+		&i.LongDescription,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

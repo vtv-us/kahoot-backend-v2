@@ -13,6 +13,7 @@ type Server struct {
 	UserService     *UserService
 	SlideService    *SlideService
 	QuestionService *QuestionService
+	AnswerService   *AnswerService
 }
 
 func NewServer(store repositories.Store, c *utils.Config) *Server {
@@ -32,6 +33,7 @@ func NewServer(store repositories.Store, c *utils.Config) *Server {
 	userService := NewUserService(store, &cloudinarySvc, c)
 	slideService := NewSlideService(store, c)
 	questionService := NewQuestionService(store, c)
+	answerService := NewAnswerService(store, c)
 
 	return &Server{
 		AuthService:     authService,
@@ -39,5 +41,6 @@ func NewServer(store repositories.Store, c *utils.Config) *Server {
 		UserService:     userService,
 		SlideService:    slideService,
 		QuestionService: questionService,
+		AnswerService:   answerService,
 	}
 }

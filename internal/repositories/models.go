@@ -23,3 +23,7 @@ type Slide struct {
 type Question struct {
 	entities.Question
 }
+
+type Answer struct {
+	entities.Answer
+}
