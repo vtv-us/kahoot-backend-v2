@@ -2,6 +2,7 @@ package services
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -59,13 +60,18 @@ func (s *AnswerService) GetAnswerByQuestionID(ctx *gin.Context) {
 		return
 	}
 
-	question, err := s.DB.GetAnswersByQuestion(ctx, req.QuestionID)
+	answer, err := s.DB.GetAnswersByQuestion(ctx, req.QuestionID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, question)
+	// sort by index ascending
+	sort.Slice(answer, func(i, j int) bool {
+		return answer[i].Index < answer[j].Index
+	})
+
+	ctx.JSON(http.StatusOK, answer)
 }
 
 type getAnswerByIDRequest struct {
