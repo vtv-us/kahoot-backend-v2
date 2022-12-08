@@ -28,7 +28,7 @@ func main() {
 	socket := services.InitSocketServer()
 
 	routes.InitGoth(&c)
-	route := routes.InitRoutes(server, socket)
+	route := routes.InitRoutes(server, socket, &c)
 	go func() {
 		if err := socket.Serve(); err != nil {
 			log.Fatalf("socketio listen error: %s\n", err)

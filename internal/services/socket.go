@@ -145,7 +145,6 @@ func InitSocketServer() *socketio.Server {
 
 	server.OnError("/", func(s socketio.Conn, e error) {
 		fmt.Println("meet error:", e)
-		s.Emit("error", e)
 	})
 
 	server.OnDisconnect("/", func(s socketio.Conn, reason string) {

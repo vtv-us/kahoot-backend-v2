@@ -12,7 +12,7 @@ import (
 	"github.com/vtv-us/kahoot-backend/internal/utils"
 )
 
-func InitRoutes(server *services.Server, socket *socketio.Server) *gin.Engine {
+func InitRoutes(server *services.Server, socket *socketio.Server, c *utils.Config) *gin.Engine {
 	// gin.SetMode(gin.ReleaseMode)
 	route := gin.Default()
 	a := services.InitAuthMiddleware(server.AuthService)
@@ -79,6 +79,7 @@ func InitRoutes(server *services.Server, socket *socketio.Server) *gin.Engine {
 	answer.PUT("", server.AnswerService.UpdateAnswer)
 	answer.DELETE("/:answer_id", server.AnswerService.DeleteAnswer)
 
+	route.Use(services.GinMiddleware(c.FrontendAddress))
 	route.GET("/socket.io/*any", gin.WrapH(socket))
 	route.POST("/socket.io/*any", gin.WrapH(socket))
 	route.GET("/test", func(c *gin.Context) {
