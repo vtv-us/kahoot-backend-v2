@@ -8,6 +8,8 @@ import (
 
 type Store interface {
 	Querier
+	DeleteSlideTx(ctx context.Context, id string) error
+	DeleteQuestionTx(ctx context.Context, id string) error
 }
 type SQLStore struct {
 	*Queries

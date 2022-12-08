@@ -143,13 +143,7 @@ func (s *QuestionService) DeleteQuestion(ctx *gin.Context) {
 		return
 	}
 
-	err = s.DB.DeleteAnswersByQuestion(ctx, req.QuestionID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
-		return
-	}
-
-	err = s.DB.DeleteQuestion(ctx, req.QuestionID)
+	err = s.DB.DeleteQuestionTx(ctx, req.QuestionID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return

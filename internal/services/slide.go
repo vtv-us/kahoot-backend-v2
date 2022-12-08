@@ -132,19 +132,7 @@ func (s *SlideService) DeleteSlide(ctx *gin.Context) {
 		return
 	}
 
-	err = s.DB.DeleteAnswersBySlide(ctx, req.SlideID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
-		return
-	}
-
-	err = s.DB.DeleteQuestionsBySlide(ctx, req.SlideID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
-		return
-	}
-
-	err = s.DB.DeleteSlide(ctx, req.SlideID)
+	err = s.DB.DeleteSlideTx(ctx, req.SlideID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return
