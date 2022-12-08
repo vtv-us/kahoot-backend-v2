@@ -2,6 +2,7 @@
 INSERT INTO "question" (
     id,
     slide_id,
+    index,
     raw_question,
     meta,
     long_description,
@@ -13,6 +14,7 @@ INSERT INTO "question" (
     $3,
     $4,
     $5,
+    $6,
     now(),
     now()
 )
@@ -22,7 +24,8 @@ RETURNING *;
 SELECT * FROM "question" WHERE id = $1;
 
 -- name: GetQuestionsBySlide :many
-SELECT * FROM "question" WHERE slide_id = $1;
+SELECT * FROM "question" WHERE slide_id = $1
+ORDER BY index ASC;
 
 -- name: GetOwnerOfQuestion :one
 SELECT s.owner FROM "question" q
@@ -34,6 +37,7 @@ UPDATE "question" SET
     raw_question = $2,
     meta = $3,
     long_description = $4,
+    index = $5,
     updated_at = now()
 WHERE id = $1
 RETURNING *;

@@ -20,7 +20,8 @@ RETURNING *;
 SELECT * FROM "answer" WHERE id = $1;
 
 -- name: GetAnswersByQuestion :many
-SELECT * FROM "answer" WHERE question_id = $1;
+SELECT * FROM "answer" WHERE question_id = $1
+ORDER BY index ASC;
 
 -- name: UpdateAnswer :one
 UPDATE "answer" SET

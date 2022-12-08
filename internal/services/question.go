@@ -25,6 +25,7 @@ func NewQuestionService(db repositories.Store, c *utils.Config) *QuestionService
 
 type createQuestionRequest struct {
 	SlideID         string `json:"slide_id" binding:"required"`
+	Index           int16  `json:"index" binding:"required"`
 	RawQuestion     string `json:"raw_question" binding:"required"`
 	Meta            string `json:"meta"`
 	LongDescription string `json:"long_description"`
@@ -40,6 +41,7 @@ func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
 	question, err := s.DB.CreateQuestion(ctx, repositories.CreateQuestionParams{
 		ID:              uuid.NewString(),
 		SlideID:         req.SlideID,
+		Index:           req.Index,
 		RawQuestion:     req.RawQuestion,
 		Meta:            req.Meta,
 		LongDescription: req.LongDescription,
@@ -94,6 +96,7 @@ func (s *QuestionService) GetQuestionByID(ctx *gin.Context) {
 
 type updateQuestionRequest struct {
 	QuestionID      string `json:"question_id" binding:"required"`
+	Index           int16  `json:"index" binding:"required"`
 	RawQuestion     string `json:"raw_question" binding:"required"`
 	Meta            string `json:"meta"`
 	LongDescription string `json:"long_description"`
@@ -114,6 +117,7 @@ func (s *QuestionService) UpdateQuestion(ctx *gin.Context) {
 
 	question, err := s.DB.UpdateQuestion(ctx, repositories.UpdateQuestionParams{
 		ID:              req.QuestionID,
+		Index:           req.Index,
 		RawQuestion:     req.RawQuestion,
 		Meta:            req.Meta,
 		LongDescription: req.LongDescription,

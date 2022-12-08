@@ -13,6 +13,7 @@ const createQuestion = `-- name: CreateQuestion :one
 INSERT INTO "question" (
     id,
     slide_id,
+    index,
     raw_question,
     meta,
     long_description,
@@ -24,15 +25,17 @@ INSERT INTO "question" (
     $3,
     $4,
     $5,
+    $6,
     now(),
     now()
 )
-RETURNING id, slide_id, raw_question, meta, long_description, created_at, updated_at
+RETURNING id, slide_id, index, raw_question, meta, long_description, created_at, updated_at
 `
 
 type CreateQuestionParams struct {
 	ID              string `json:"id"`
 	SlideID         string `json:"slide_id"`
+	Index           int16  `json:"index"`
 	RawQuestion     string `json:"raw_question"`
 	Meta            string `json:"meta"`
 	LongDescription string `json:"long_description"`
@@ -42,6 +45,7 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 	row := q.db.QueryRowContext(ctx, createQuestion,
 		arg.ID,
 		arg.SlideID,
+		arg.Index,
 		arg.RawQuestion,
 		arg.Meta,
 		arg.LongDescription,
@@ -50,6 +54,7 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.SlideID,
+		&i.Index,
 		&i.RawQuestion,
 		&i.Meta,
 		&i.LongDescription,
@@ -91,7 +96,7 @@ func (q *Queries) GetOwnerOfQuestion(ctx context.Context, id string) (string, er
 }
 
 const getQuestion = `-- name: GetQuestion :one
-SELECT id, slide_id, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE id = $1
+SELECT id, slide_id, index, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE id = $1
 `
 
 func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) {
@@ -100,6 +105,7 @@ func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) 
 	err := row.Scan(
 		&i.ID,
 		&i.SlideID,
+		&i.Index,
 		&i.RawQuestion,
 		&i.Meta,
 		&i.LongDescription,
@@ -110,7 +116,8 @@ func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) 
 }
 
 const getQuestionsBySlide = `-- name: GetQuestionsBySlide :many
-SELECT id, slide_id, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE slide_id = $1
+SELECT id, slide_id, index, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE slide_id = $1
+ORDER BY index ASC
 `
 
 func (q *Queries) GetQuestionsBySlide(ctx context.Context, slideID string) ([]Question, error) {
@@ -125,6 +132,7 @@ func (q *Queries) GetQuestionsBySlide(ctx context.Context, slideID string) ([]Qu
 		if err := rows.Scan(
 			&i.ID,
 			&i.SlideID,
+			&i.Index,
 			&i.RawQuestion,
 			&i.Meta,
 			&i.LongDescription,
@@ -149,9 +157,10 @@ UPDATE "question" SET
     raw_question = $2,
     meta = $3,
     long_description = $4,
+    index = $5,
     updated_at = now()
 WHERE id = $1
-RETURNING id, slide_id, raw_question, meta, long_description, created_at, updated_at
+RETURNING id, slide_id, index, raw_question, meta, long_description, created_at, updated_at
 `
 
 type UpdateQuestionParams struct {
@@ -159,6 +168,7 @@ type UpdateQuestionParams struct {
 	RawQuestion     string `json:"raw_question"`
 	Meta            string `json:"meta"`
 	LongDescription string `json:"long_description"`
+	Index           int16  `json:"index"`
 }
 
 func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error) {
@@ -167,11 +177,13 @@ func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) 
 		arg.RawQuestion,
 		arg.Meta,
 		arg.LongDescription,
+		arg.Index,
 	)
 	var i Question
 	err := row.Scan(
 		&i.ID,
 		&i.SlideID,
+		&i.Index,
 		&i.RawQuestion,
 		&i.Meta,
 		&i.LongDescription,

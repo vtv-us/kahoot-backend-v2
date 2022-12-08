@@ -103,6 +103,7 @@ func (q *Queries) GetAnswer(ctx context.Context, id string) (Answer, error) {
 
 const getAnswersByQuestion = `-- name: GetAnswersByQuestion :many
 SELECT id, question_id, index, raw_answer, created_at, updated_at FROM "answer" WHERE question_id = $1
+ORDER BY index ASC
 `
 
 func (q *Queries) GetAnswersByQuestion(ctx context.Context, questionID string) ([]Answer, error) {

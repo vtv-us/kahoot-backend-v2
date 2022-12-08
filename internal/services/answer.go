@@ -2,7 +2,6 @@ package services
 
 import (
 	"net/http"
-	"sort"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -65,11 +64,6 @@ func (s *AnswerService) GetAnswerByQuestionID(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return
 	}
-
-	// sort by index ascending
-	sort.Slice(answer, func(i, j int) bool {
-		return answer[i].Index < answer[j].Index
-	})
 
 	ctx.JSON(http.StatusOK, answer)
 }

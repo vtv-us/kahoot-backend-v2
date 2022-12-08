@@ -29,6 +29,7 @@ type Group struct {
 type Question struct {
 	ID              string    `json:"id"`
 	SlideID         string    `json:"slide_id"`
+	Index           int16     `json:"index"`
 	RawQuestion     string    `json:"raw_question"`
 	Meta            string    `json:"meta"`
 	LongDescription string    `json:"long_description"`

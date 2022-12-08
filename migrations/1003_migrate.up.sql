@@ -10,6 +10,7 @@ create table "slide" (
 create table "question" (
     "id" text primary key,
     "slide_id" text not null,
+    "index" smallint not null,
     "raw_question" text not null,
     "meta" text not null default '',
     "long_description" text not null default '',
