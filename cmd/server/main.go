@@ -25,7 +25,7 @@ func main() {
 	store := db.NewStore(conn)
 	server := services.NewServer(store, &c)
 
-	socket := services.InitSocketServer()
+	socket := services.InitSocketServer(server)
 
 	routes.InitGoth(&c)
 	route := routes.InitRoutes(server, socket, &c)

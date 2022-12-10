@@ -18,6 +18,16 @@ type Answer struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+type AnswerHistory struct {
+	ID          string    `json:"id"`
+	SlideID     string    `json:"slide_id"`
+	RawQuestion string    `json:"raw_question"`
+	RawAnswer   string    `json:"raw_answer"`
+	NumChosen   int32     `json:"num_chosen"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 type Group struct {
 	GroupID     string    `json:"group_id"`
 	GroupName   string    `json:"group_name"`

@@ -23,6 +23,9 @@ SELECT * FROM "answer" WHERE id = $1;
 SELECT * FROM "answer" WHERE question_id = $1
 ORDER BY index ASC;
 
+-- name: GetAnswerByQuestionAndIndex :one
+SELECT * FROM "answer" WHERE question_id = $1 AND index = $2;
+
 -- name: UpdateAnswer :one
 UPDATE "answer" SET
     index = $2,

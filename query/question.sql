@@ -27,6 +27,9 @@ SELECT * FROM "question" WHERE id = $1;
 SELECT * FROM "question" WHERE slide_id = $1
 ORDER BY index ASC;
 
+-- name: GetQuestionBySlideAndIndex :one
+SELECT * FROM "question" WHERE slide_id = $1 AND index = $2;
+
 -- name: GetOwnerOfQuestion :one
 SELECT s.owner FROM "question" q
 JOIN "slide" s ON q.slide_id = s.id

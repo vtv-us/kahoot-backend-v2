@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -151,6 +152,47 @@ func (s *SlideService) checkOwnerPermission(ctx *gin.Context, slideID string) er
 
 	if slide.Owner != userID {
 		return fmt.Errorf("you are not the owner of this slide")
+	}
+
+	return nil
+}
+
+// Question Index -> Answer Index -> Count
+type CreateSlideHistoryRequest struct {
+	SlideID        string
+	QuestionResult map[int]map[int]int
+}
+
+func (s *SlideService) CreateSlideHistory(req CreateSlideHistoryRequest) error {
+	ctx := context.Background()
+	for questionIndex, answerResult := range req.QuestionResult {
+		question, err := s.DB.GetQuestionBySlideAndIndex(ctx, repositories.GetQuestionBySlideAndIndexParams{
+			SlideID: req.SlideID,
+			Index:   int16(questionIndex),
+		})
+		if err != nil {
+			return err
+		}
+
+		for answerIndex, count := range answerResult {
+			answer, err := s.DB.GetAnswerByQuestionAndIndex(ctx, repositories.GetAnswerByQuestionAndIndexParams{
+				QuestionID: question.ID,
+				Index:      int16(answerIndex),
+			})
+			if err != nil {
+				return err
+			}
+
+			_, err = s.DB.SaveHistory(ctx, repositories.SaveHistoryParams{
+				SlideID:     req.SlideID,
+				RawQuestion: question.RawQuestion,
+				RawAnswer:   answer.RawAnswer,
+				NumChosen:   int32(count),
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

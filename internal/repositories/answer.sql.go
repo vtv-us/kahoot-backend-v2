@@ -101,6 +101,29 @@ func (q *Queries) GetAnswer(ctx context.Context, id string) (Answer, error) {
 	return i, err
 }
 
+const getAnswerByQuestionAndIndex = `-- name: GetAnswerByQuestionAndIndex :one
+SELECT id, question_id, index, raw_answer, created_at, updated_at FROM "answer" WHERE question_id = $1 AND index = $2
+`
+
+type GetAnswerByQuestionAndIndexParams struct {
+	QuestionID string `json:"question_id"`
+	Index      int16  `json:"index"`
+}
+
+func (q *Queries) GetAnswerByQuestionAndIndex(ctx context.Context, arg GetAnswerByQuestionAndIndexParams) (Answer, error) {
+	row := q.db.QueryRowContext(ctx, getAnswerByQuestionAndIndex, arg.QuestionID, arg.Index)
+	var i Answer
+	err := row.Scan(
+		&i.ID,
+		&i.QuestionID,
+		&i.Index,
+		&i.RawAnswer,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getAnswersByQuestion = `-- name: GetAnswersByQuestion :many
 SELECT id, question_id, index, raw_answer, created_at, updated_at FROM "answer" WHERE question_id = $1
 ORDER BY index ASC

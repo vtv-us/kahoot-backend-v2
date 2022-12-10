@@ -17,7 +17,8 @@ type Participant struct {
 	IsTeacher bool
 	Status    string
 	SID       string
-	Answer    map[int]string
+	// [Question index] -> Answer
+	Answer map[int]int
 }
 
 // [ID] -> List of participants
@@ -26,7 +27,7 @@ type RoomState map[string]int
 
 var room Room
 
-func InitSocketServer() *socketio.Server {
+func InitSocketServer(serverAPI *Server) *socketio.Server {
 
 	server := socketio.NewServer(nil)
 
@@ -68,7 +69,7 @@ func InitSocketServer() *socketio.Server {
 		roomState[roomID] = 1
 		// check if room already has a teacher
 		for _, participant := range room[roomID] {
-			if participant.IsTeacher {
+			if participant.IsTeacher && participant.Username != username {
 				s.Emit("error", "Room already has a teacher")
 				return
 			}
@@ -162,7 +163,7 @@ func InitSocketServer() *socketio.Server {
 		s.Join(roomID)
 	})
 
-	server.OnEvent("/", "submitAnswer", func(s socketio.Conn, question int, answer string) {
+	server.OnEvent("/", "submitAnswer", func(s socketio.Conn, question int, answer int) {
 		ctx := s.Context().(*RoomContext)
 		username := ctx.Username
 		roomID := ctx.RoomID
@@ -170,17 +171,17 @@ func InitSocketServer() *socketio.Server {
 		for i, participant := range room[roomID] {
 			if participant.Username == username {
 				if participant.Answer == nil {
-					participant.Answer = make(map[int]string)
+					participant.Answer = make(map[int]int)
 				}
 				participant.Answer[question] = answer
 				room[roomID][i] = participant
 			}
 		}
 		s.Emit("notify", "Your answer has been submitted")
-		count := make(map[string]int)
+		count := make(map[int]int)
 		for _, participant := range room[roomID] {
 			if participant.Answer != nil {
-				if participant.Answer[question] != "" {
+				if participant.Answer[question] != 0 {
 					count[participant.Answer[question]]++
 				}
 			}
@@ -193,16 +194,44 @@ func InitSocketServer() *socketio.Server {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		// count answer
-		count := make(map[string]int)
+		count := make(map[int]int)
 		for _, participant := range room[roomID] {
 			if participant.Answer != nil {
-				if participant.Answer[question] != "" {
+				if participant.Answer[question] != 0 {
 					count[participant.Answer[question]]++
 				}
 			}
 		}
 		// send to all participants
 		server.BroadcastToRoom("/", roomID, "showStatistic", count)
+	})
+
+	server.OnEvent("/", "saveSlideHistory", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		// save slide history
+		// question idx -> answer idx-> count
+		question := make(map[int]map[int]int)
+		for _, participant := range room[roomID] {
+			if participant.Answer != nil {
+				for q, a := range participant.Answer {
+					if question[q] == nil {
+						question[q] = make(map[int]int)
+					}
+					question[q][a]++
+				}
+			}
+		}
+		// save to db
+		err := serverAPI.SlideService.CreateSlideHistory(CreateSlideHistoryRequest{
+			SlideID:        roomID,
+			QuestionResult: question,
+		})
+		if err != nil {
+			s.Emit("error", fmt.Errorf("save slide history failed: %w", err))
+			return
+		}
+		s.Emit("notify", "Your slide history has been saved")
 	})
 
 	server.OnError("/", func(s socketio.Conn, e error) {

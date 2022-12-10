@@ -115,6 +115,31 @@ func (q *Queries) GetQuestion(ctx context.Context, id string) (Question, error) 
 	return i, err
 }
 
+const getQuestionBySlideAndIndex = `-- name: GetQuestionBySlideAndIndex :one
+SELECT id, slide_id, index, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE slide_id = $1 AND index = $2
+`
+
+type GetQuestionBySlideAndIndexParams struct {
+	SlideID string `json:"slide_id"`
+	Index   int16  `json:"index"`
+}
+
+func (q *Queries) GetQuestionBySlideAndIndex(ctx context.Context, arg GetQuestionBySlideAndIndexParams) (Question, error) {
+	row := q.db.QueryRowContext(ctx, getQuestionBySlideAndIndex, arg.SlideID, arg.Index)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.SlideID,
+		&i.Index,
+		&i.RawQuestion,
+		&i.Meta,
+		&i.LongDescription,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getQuestionsBySlide = `-- name: GetQuestionsBySlide :many
 SELECT id, slide_id, index, raw_question, meta, long_description, created_at, updated_at FROM "question" WHERE slide_id = $1
 ORDER BY index ASC

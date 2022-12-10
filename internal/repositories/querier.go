@@ -25,10 +25,12 @@ type Querier interface {
 	DeleteSlide(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, email string) error
 	GetAnswer(ctx context.Context, id string) (Answer, error)
+	GetAnswerByQuestionAndIndex(ctx context.Context, arg GetAnswerByQuestionAndIndexParams) (Answer, error)
 	GetAnswersByQuestion(ctx context.Context, questionID string) ([]Answer, error)
 	GetGroup(ctx context.Context, groupID string) (Group, error)
 	GetOwnerOfQuestion(ctx context.Context, id string) (string, error)
 	GetQuestion(ctx context.Context, id string) (Question, error)
+	GetQuestionBySlideAndIndex(ctx context.Context, arg GetQuestionBySlideAndIndexParams) (Question, error)
 	GetQuestionsBySlide(ctx context.Context, slideID string) ([]Question, error)
 	GetRoleInGroup(ctx context.Context, arg GetRoleInGroupParams) (string, error)
 	GetSlide(ctx context.Context, id string) (Slide, error)
@@ -42,6 +44,7 @@ type Querier interface {
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
+	SaveHistory(ctx context.Context, arg SaveHistoryParams) (AnswerHistory, error)
 	UpdateAnswer(ctx context.Context, arg UpdateAnswerParams) (Answer, error)
 	UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error)
 	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error

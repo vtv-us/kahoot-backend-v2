@@ -27,3 +27,7 @@ type Question struct {
 type Answer struct {
 	entities.Answer
 }
+
+type AnswerHistory struct {
+	entities.AnswerHistory
+}
