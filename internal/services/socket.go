@@ -65,7 +65,7 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 			RoomID:   roomID,
 		}
 		s.SetContext(ctx)
-		fmt.Println("host:", roomID)
+		fmt.Println(s.ID(), username, "host:", roomID)
 		roomState[roomID] = 1
 		// check if room already has a teacher
 		for _, participant := range room[roomID] {
