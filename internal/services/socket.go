@@ -7,6 +7,11 @@ import (
 	"github.com/vtv-us/kahoot-backend/internal/constants"
 )
 
+type RoomContext struct {
+	Username string
+	RoomID   string
+}
+
 type Participant struct {
 	Username  string
 	IsTeacher bool
@@ -42,9 +47,10 @@ func InitSocketServer() *socketio.Server {
 		}
 		s.Emit("getRoomActive", ids)
 	})
-	server.OnEvent("/", "getActiveParticipants", func(s socketio.Conn, id string) {
+	server.OnEvent("/", "getActiveParticipants", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
 		activeParticipants := make([]Participant, 0)
-		for _, participant := range room[id] {
+		for _, participant := range room[ctx.RoomID] {
 			if participant.Status == constants.SocketParticipantStatus_ACTIVE {
 				activeParticipants = append(activeParticipants, participant)
 			}
@@ -53,8 +59,21 @@ func InitSocketServer() *socketio.Server {
 	})
 
 	server.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
+		ctx := &RoomContext{
+			Username: username,
+			RoomID:   roomID,
+		}
+		s.SetContext(ctx)
 		fmt.Println("host:", roomID)
 		roomState[roomID] = 1
+		// check if room already has a teacher
+		for _, participant := range room[roomID] {
+			if participant.IsTeacher {
+				s.Emit("error", "Room already has a teacher")
+				return
+			}
+		}
+
 		exist := checkExistInRoom(username, roomID)
 		if exist {
 			for i, participant := range room[roomID] {
@@ -74,25 +93,52 @@ func InitSocketServer() *socketio.Server {
 		s.Join(roomID)
 	})
 
-	server.OnEvent("/", "getRoomState", func(s socketio.Conn, roomID string) {
+	server.OnEvent("/", "getRoomState", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
 		if _, ok := roomState[roomID]; !ok {
 			roomState[roomID] = 0
 		}
 		s.Emit("getRoomState", roomState[roomID])
 	})
 
-	server.OnEvent("/", "next", func(s socketio.Conn, roomID string) {
+	server.OnEvent("/", "next", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		username := ctx.Username
+		err := checkTeacherPermission(username, roomID)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
 		roomState[roomID]++
 		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
 	})
 
-	server.OnEvent("/", "prev", func(s socketio.Conn, roomID string) {
-		roomState[roomID]--
-		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+	server.OnEvent("/", "prev", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		username := ctx.Username
+		err := checkTeacherPermission(username, roomID)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
+		if roomState[roomID] > 1 {
+			roomState[roomID]--
+			server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+		} else {
+			s.Emit("error", "You are at the first question")
+		}
 	})
 
 	server.OnEvent("/", "join", func(s socketio.Conn, username, roomID string) {
 		fmt.Println(s.ID(), "join room", roomID)
+		ctx := &RoomContext{
+			Username: username,
+			RoomID:   roomID,
+		}
+		s.SetContext(ctx)
 		exist := checkExistInRoom(username, roomID)
 		if exist {
 			for i, participant := range room[roomID] {
@@ -116,7 +162,10 @@ func InitSocketServer() *socketio.Server {
 		s.Join(roomID)
 	})
 
-	server.OnEvent("/", "submitAnswer", func(s socketio.Conn, username, roomID string, question int, answer string) {
+	server.OnEvent("/", "submitAnswer", func(s socketio.Conn, question int, answer string) {
+		ctx := s.Context().(*RoomContext)
+		username := ctx.Username
+		roomID := ctx.RoomID
 		fmt.Println("submitAnswer:", username, roomID, answer)
 		for i, participant := range room[roomID] {
 			if participant.Username == username {
@@ -127,9 +176,22 @@ func InitSocketServer() *socketio.Server {
 				room[roomID][i] = participant
 			}
 		}
+		s.Emit("notify", "Your answer has been submitted")
+		count := make(map[string]int)
+		for _, participant := range room[roomID] {
+			if participant.Answer != nil {
+				if participant.Answer[question] != "" {
+					count[participant.Answer[question]]++
+				}
+			}
+		}
+		// send to all participants
+		server.BroadcastToRoom("/", roomID, "showStatistic", count)
 	})
 
-	server.OnEvent("/", "showStatistic", func(s socketio.Conn, roomID string, question int) {
+	server.OnEvent("/", "showStatistic", func(s socketio.Conn, question int) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
 		// count answer
 		count := make(map[string]int)
 		for _, participant := range room[roomID] {
@@ -203,4 +265,16 @@ func checkExistInRoom(username, roomID string) bool {
 		}
 	}
 	return false
+}
+
+func checkTeacherPermission(username, roomID string) error {
+	for _, participant := range room[roomID] {
+		if participant.Username == username {
+			if participant.IsTeacher {
+				return nil
+			}
+			return fmt.Errorf("you are not a teacher in the room")
+		}
+	}
+	return fmt.Errorf("you are not in the room")
 }
