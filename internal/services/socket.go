@@ -102,6 +102,18 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		}
 		s.Emit("getRoomState", roomState[roomID])
 	})
+	server.OnEvent("/", "setRoomState", func(s socketio.Conn, state int) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		username := ctx.Username
+		err := checkTeacherPermission(username, roomID)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
+		roomState[roomID] = state
+		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+	})
 
 	server.OnEvent("/", "next", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
