@@ -59,6 +59,10 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		s.Emit("getActiveParticipants", activeParticipants)
 	})
 
+	server.OnEvent("/", "manualDisconnect", func(s socketio.Conn) {
+		s.Close()
+	})
+
 	server.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
 		ctx := &RoomContext{
 			Username: username,
