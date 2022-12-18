@@ -21,9 +21,17 @@ type Participant struct {
 	Answer map[int]int
 }
 
+type ChatMessage struct {
+	Username string
+	Message  string
+}
+
 // [ID] -> List of participants
 type Room map[string][]Participant
 type RoomState map[string]int
+
+// [ID] -> List of chat messages
+type ChatRoom map[string][]ChatMessage
 
 var room Room
 
@@ -33,6 +41,7 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 
 	room = make(Room)
 	roomState := make(RoomState)
+	chatRoom := make(ChatRoom)
 
 	server.OnConnect("/", func(s socketio.Conn) error {
 		fmt.Println("connected:", s.ID())
@@ -279,25 +288,22 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		}
 	})
 
-	server.OnConnect("/chat", func(s socketio.Conn) error {
-		return nil
+	server.OnEvent("/", "chat", func(s socketio.Conn, msg string) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		username := ctx.Username
+		chatRoom[roomID] = append(chatRoom[roomID], ChatMessage{
+			Username: username,
+			Message:  msg,
+		})
+		// send to all participants
+		server.BroadcastToRoom("/", roomID, "chat", username, msg)
 	})
 
-	server.OnEvent("/chat", "join", func(s socketio.Conn, username, roomID string) {
-		fmt.Println("chat join:", username, roomID)
-		s.Join(roomID)
-		s.SetContext(username)
-	})
-
-	server.OnEvent("/chat", "send", func(s socketio.Conn, msg string) {
-		username := s.Context().(string)
-		fmt.Println("chat send:", username, msg)
-		s.Emit("reply", username, msg)
-	})
-
-	server.OnError("/chat", func(s socketio.Conn, e error) {
-		fmt.Println("meet error:", e)
-		s.Emit("error", e)
+	server.OnEvent("/", "getChatHistory", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		s.Emit("chatHistory", chatRoom[roomID])
 	})
 
 	return server

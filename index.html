@@ -68,6 +68,12 @@
       socket.on("getRoomState", function (msg) {
         console.log(msg);
       });
+      socket.on("chatHistory", function (msg) {
+        console.log("chatHistory", msg);
+      });
+      socket.on("chat", function (username, msg) {
+        console.log("chat", username, msg);
+      });
 
       socket.on("reply", function (msg) {
         $("#messages").append($("<li>").text(msg));
