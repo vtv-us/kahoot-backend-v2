@@ -19,13 +19,12 @@ type Answer struct {
 }
 
 type AnswerHistory struct {
-	ID          string    `json:"id"`
-	SlideID     string    `json:"slide_id"`
-	RawQuestion string    `json:"raw_question"`
-	RawAnswer   string    `json:"raw_answer"`
-	NumChosen   int32     `json:"num_chosen"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Username   string    `json:"username"`
+	SlideID    string    `json:"slide_id"`
+	QuestionID string    `json:"question_id"`
+	AnswerID   string    `json:"answer_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type Group struct {
@@ -75,4 +74,14 @@ type UserGroup struct {
 	Role      string    `json:"role"`
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type UserQuestion struct {
+	QuestionID string    `json:"question_id"`
+	SlideID    string    `json:"slide_id"`
+	Username   string    `json:"username"`
+	Content    string    `json:"content"`
+	Votes      int32     `json:"votes"`
+	Answered   bool      `json:"answered"`
+	CreatedAt  time.Time `json:"created_at"`
 }

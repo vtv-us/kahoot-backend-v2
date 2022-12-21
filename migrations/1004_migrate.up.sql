@@ -1,11 +1,11 @@
 create table "answer_history" (
-    "id" text primary key,
+    "username" text not null,
     "slide_id" text not null,
-    "raw_question" text not null,
-    "raw_answer" text not null,
-    "num_chosen" integer not null default 0,
+    "question_id" text not null,
+    "answer_id" text not null,
     "created_at" timestamp not null default now(),
-    "updated_at" timestamp not null default now()
+    "updated_at" timestamp not null default now(),
+    constraint "answer_history_pkey" primary key ("username", "slide_id", "question_id")
 );
 
 create function "slide_delete_trigger" () returns trigger as $$

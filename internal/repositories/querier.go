@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
 	CheckUserInGroup(ctx context.Context, arg CheckUserInGroupParams) (bool, error)
+	CountAnswerByQuestionID(ctx context.Context, questionID string) ([]CountAnswerByQuestionIDRow, error)
 	CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error)
@@ -26,6 +27,7 @@ type Querier interface {
 	DeleteUser(ctx context.Context, email string) error
 	GetAnswer(ctx context.Context, id string) (Answer, error)
 	GetAnswerByQuestionAndIndex(ctx context.Context, arg GetAnswerByQuestionAndIndexParams) (Answer, error)
+	GetAnswerHistory(ctx context.Context, arg GetAnswerHistoryParams) (AnswerHistory, error)
 	GetAnswersByQuestion(ctx context.Context, questionID string) ([]Answer, error)
 	GetGroup(ctx context.Context, groupID string) (Group, error)
 	GetOwnerOfQuestion(ctx context.Context, id string) (string, error)
@@ -38,13 +40,18 @@ type Querier interface {
 	GetUser(ctx context.Context, userID string) (User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserGroup(ctx context.Context, arg GetUserGroupParams) (UserGroup, error)
+	GetUserQuestion(ctx context.Context, questionID string) (UserQuestion, error)
+	ListAnswerHistoryByAnswerID(ctx context.Context, answerID string) ([]AnswerHistory, error)
+	ListAnswerHistoryByQuestionID(ctx context.Context, questionID string) ([]AnswerHistory, error)
+	ListAnswerHistoryBySlideID(ctx context.Context, slideID string) ([]AnswerHistory, error)
 	ListEmailInGroup(ctx context.Context, groupID string) ([]string, error)
 	ListGroupJoined(ctx context.Context, userID string) ([]ListGroupJoinedRow, error)
 	ListGroupOwned(ctx context.Context, userID string) ([]ListGroupOwnedRow, error)
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
+	ListUserQuestion(ctx context.Context, slideID string) ([]UserQuestion, error)
+	MarkUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error)
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
-	SaveHistory(ctx context.Context, arg SaveHistoryParams) (AnswerHistory, error)
 	UpdateAnswer(ctx context.Context, arg UpdateAnswerParams) (Answer, error)
 	UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error)
 	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error
@@ -56,6 +63,9 @@ type Querier interface {
 	UpdateSlide(ctx context.Context, arg UpdateSlideParams) (Slide, error)
 	UpdateSocialID(ctx context.Context, arg UpdateSocialIDParams) (User, error)
 	UpdateVerifiedCode(ctx context.Context, arg UpdateVerifiedCodeParams) (User, error)
+	UpsertAnswerHistory(ctx context.Context, arg UpsertAnswerHistoryParams) (AnswerHistory, error)
+	UpsertUserQuestion(ctx context.Context, arg UpsertUserQuestionParams) (UserQuestion, error)
+	UpvoteUserQuestion(ctx context.Context, questionID string) (UserQuestion, error)
 	Verify(ctx context.Context, email string) (User, error)
 }
 

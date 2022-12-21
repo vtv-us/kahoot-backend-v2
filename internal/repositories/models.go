@@ -31,3 +31,7 @@ type Answer struct {
 type AnswerHistory struct {
 	entities.AnswerHistory
 }
+
+type UserQuestion struct {
+	entities.UserQuestion
+}

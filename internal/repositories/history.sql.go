@@ -9,37 +9,220 @@ import (
 	"context"
 )
 
-const saveHistory = `-- name: SaveHistory :one
-INSERT INTO "answer_history"
-    ("id", "slide_id", "raw_question", "raw_answer", "num_chosen")
-VALUES
-    ($1, $2, $3, $4, $5)
-RETURNING id, slide_id, raw_question, raw_answer, num_chosen, created_at, updated_at
+const countAnswerByQuestionID = `-- name: CountAnswerByQuestionID :many
+SELECT slide_id, question_id, answer_id, count(*) as count
+FROM "answer_history"
+WHERE question_id = $1
+GROUP BY slide_id, question_id, answer_id
+ORDER BY count DESC
 `
 
-type SaveHistoryParams struct {
-	ID          string `json:"id"`
-	SlideID     string `json:"slide_id"`
-	RawQuestion string `json:"raw_question"`
-	RawAnswer   string `json:"raw_answer"`
-	NumChosen   int32  `json:"num_chosen"`
+type CountAnswerByQuestionIDRow struct {
+	SlideID    string `json:"slide_id"`
+	QuestionID string `json:"question_id"`
+	AnswerID   string `json:"answer_id"`
+	Count      int64  `json:"count"`
 }
 
-func (q *Queries) SaveHistory(ctx context.Context, arg SaveHistoryParams) (AnswerHistory, error) {
-	row := q.db.QueryRowContext(ctx, saveHistory,
-		arg.ID,
+func (q *Queries) CountAnswerByQuestionID(ctx context.Context, questionID string) ([]CountAnswerByQuestionIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, countAnswerByQuestionID, questionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CountAnswerByQuestionIDRow{}
+	for rows.Next() {
+		var i CountAnswerByQuestionIDRow
+		if err := rows.Scan(
+			&i.SlideID,
+			&i.QuestionID,
+			&i.AnswerID,
+			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAnswerHistory = `-- name: GetAnswerHistory :one
+SELECT username, slide_id, question_id, answer_id, created_at, updated_at
+FROM "answer_history"
+WHERE username = $1 AND slide_id = $2 AND question_id = $3
+`
+
+type GetAnswerHistoryParams struct {
+	Username   string `json:"username"`
+	SlideID    string `json:"slide_id"`
+	QuestionID string `json:"question_id"`
+}
+
+func (q *Queries) GetAnswerHistory(ctx context.Context, arg GetAnswerHistoryParams) (AnswerHistory, error) {
+	row := q.db.QueryRowContext(ctx, getAnswerHistory, arg.Username, arg.SlideID, arg.QuestionID)
+	var i AnswerHistory
+	err := row.Scan(
+		&i.Username,
+		&i.SlideID,
+		&i.QuestionID,
+		&i.AnswerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listAnswerHistoryByAnswerID = `-- name: ListAnswerHistoryByAnswerID :many
+SELECT username, slide_id, question_id, answer_id, created_at, updated_at
+FROM "answer_history"
+WHERE answer_id = $1
+ORDER BY updated_at DESC
+`
+
+func (q *Queries) ListAnswerHistoryByAnswerID(ctx context.Context, answerID string) ([]AnswerHistory, error) {
+	rows, err := q.db.QueryContext(ctx, listAnswerHistoryByAnswerID, answerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnswerHistory{}
+	for rows.Next() {
+		var i AnswerHistory
+		if err := rows.Scan(
+			&i.Username,
+			&i.SlideID,
+			&i.QuestionID,
+			&i.AnswerID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAnswerHistoryByQuestionID = `-- name: ListAnswerHistoryByQuestionID :many
+SELECT username, slide_id, question_id, answer_id, created_at, updated_at
+FROM "answer_history"
+WHERE question_id = $1
+ORDER BY updated_at DESC
+`
+
+func (q *Queries) ListAnswerHistoryByQuestionID(ctx context.Context, questionID string) ([]AnswerHistory, error) {
+	rows, err := q.db.QueryContext(ctx, listAnswerHistoryByQuestionID, questionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnswerHistory{}
+	for rows.Next() {
+		var i AnswerHistory
+		if err := rows.Scan(
+			&i.Username,
+			&i.SlideID,
+			&i.QuestionID,
+			&i.AnswerID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAnswerHistoryBySlideID = `-- name: ListAnswerHistoryBySlideID :many
+SELECT username, slide_id, question_id, answer_id, created_at, updated_at
+FROM "answer_history"
+WHERE slide_id = $1
+ORDER BY updated_at DESC
+`
+
+func (q *Queries) ListAnswerHistoryBySlideID(ctx context.Context, slideID string) ([]AnswerHistory, error) {
+	rows, err := q.db.QueryContext(ctx, listAnswerHistoryBySlideID, slideID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AnswerHistory{}
+	for rows.Next() {
+		var i AnswerHistory
+		if err := rows.Scan(
+			&i.Username,
+			&i.SlideID,
+			&i.QuestionID,
+			&i.AnswerID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const upsertAnswerHistory = `-- name: UpsertAnswerHistory :one
+INSERT INTO "answer_history" (
+    "username",
+    "slide_id",
+    "question_id",
+    "answer_id"
+) VALUES (
+    $1, $2, $3, $4
+) ON CONFLICT ON CONSTRAINT "answer_history_pkey" DO UPDATE SET
+    "answer_id" = $4,
+    "updated_at" = now()
+RETURNING username, slide_id, question_id, answer_id, created_at, updated_at
+`
+
+type UpsertAnswerHistoryParams struct {
+	Username   string `json:"username"`
+	SlideID    string `json:"slide_id"`
+	QuestionID string `json:"question_id"`
+	AnswerID   string `json:"answer_id"`
+}
+
+func (q *Queries) UpsertAnswerHistory(ctx context.Context, arg UpsertAnswerHistoryParams) (AnswerHistory, error) {
+	row := q.db.QueryRowContext(ctx, upsertAnswerHistory,
+		arg.Username,
 		arg.SlideID,
-		arg.RawQuestion,
-		arg.RawAnswer,
-		arg.NumChosen,
+		arg.QuestionID,
+		arg.AnswerID,
 	)
 	var i AnswerHistory
 	err := row.Scan(
-		&i.ID,
+		&i.Username,
 		&i.SlideID,
-		&i.RawQuestion,
-		&i.RawAnswer,
-		&i.NumChosen,
+		&i.QuestionID,
+		&i.AnswerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

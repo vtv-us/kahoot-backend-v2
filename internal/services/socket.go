@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 
 	socketio "github.com/googollee/go-socket.io"
@@ -8,8 +9,9 @@ import (
 )
 
 type RoomContext struct {
-	Username string
-	RoomID   string
+	Username  string
+	RoomID    string
+	IsTeacher bool
 }
 
 type Participant struct {
@@ -35,20 +37,20 @@ type ChatRoom map[string][]ChatMessage
 
 var room Room
 
-func InitSocketServer(serverAPI *Server) *socketio.Server {
+func InitSocketServer(server *Server) *socketio.Server {
 
-	server := socketio.NewServer(nil)
+	socket := socketio.NewServer(nil)
 
 	room = make(Room)
 	roomState := make(RoomState)
 	chatRoom := make(ChatRoom)
 
-	server.OnConnect("/", func(s socketio.Conn) error {
+	socket.OnConnect("/", func(s socketio.Conn) error {
 		fmt.Println("connected:", s.ID())
 		return nil
 	})
 
-	server.OnEvent("/", "getRoomActive", func(s socketio.Conn) {
+	socket.OnEvent("/", "getRoomActive", func(s socketio.Conn) {
 		ids := make([]string, 0)
 		for id, participants := range room {
 			if len(participants) > 0 {
@@ -57,7 +59,7 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		}
 		s.Emit("getRoomActive", ids)
 	})
-	server.OnEvent("/", "getActiveParticipants", func(s socketio.Conn) {
+	socket.OnEvent("/", "getActiveParticipants", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
 		activeParticipants := make([]Participant, 0)
 		for _, participant := range room[ctx.RoomID] {
@@ -68,14 +70,15 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		s.Emit("getActiveParticipants", activeParticipants)
 	})
 
-	server.OnEvent("/", "manualDisconnect", func(s socketio.Conn) {
+	socket.OnEvent("/", "manualDisconnect", func(s socketio.Conn) {
 		s.Close()
 	})
 
-	server.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
+	socket.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
 		ctx := &RoomContext{
-			Username: username,
-			RoomID:   roomID,
+			Username:  username,
+			RoomID:    roomID,
+			IsTeacher: true,
 		}
 		s.SetContext(ctx)
 		fmt.Println(s.ID(), username, "host:", roomID)
@@ -107,7 +110,7 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		s.Join(roomID)
 	})
 
-	server.OnEvent("/", "getRoomState", func(s socketio.Conn) {
+	socket.OnEvent("/", "getRoomState", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		if _, ok := roomState[roomID]; !ok {
@@ -115,7 +118,7 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		}
 		s.Emit("getRoomState", roomState[roomID])
 	})
-	server.OnEvent("/", "setRoomState", func(s socketio.Conn, state int) {
+	socket.OnEvent("/", "setRoomState", func(s socketio.Conn, state int) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		username := ctx.Username
@@ -125,10 +128,10 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 			return
 		}
 		roomState[roomID] = state
-		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+		socket.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
 	})
 
-	server.OnEvent("/", "next", func(s socketio.Conn) {
+	socket.OnEvent("/", "next", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		username := ctx.Username
@@ -138,10 +141,10 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 			return
 		}
 		roomState[roomID]++
-		server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+		socket.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
 	})
 
-	server.OnEvent("/", "prev", func(s socketio.Conn) {
+	socket.OnEvent("/", "prev", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		username := ctx.Username
@@ -152,17 +155,18 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		}
 		if roomState[roomID] > 1 {
 			roomState[roomID]--
-			server.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
+			socket.BroadcastToRoom("/", roomID, "getRoomState", roomState[roomID])
 		} else {
 			s.Emit("error", "You are at the first question")
 		}
 	})
 
-	server.OnEvent("/", "join", func(s socketio.Conn, username, roomID string) {
+	socket.OnEvent("/", "join", func(s socketio.Conn, username, roomID string) {
 		fmt.Println(s.ID(), "join room", roomID)
 		ctx := &RoomContext{
-			Username: username,
-			RoomID:   roomID,
+			Username:  username,
+			RoomID:    roomID,
+			IsTeacher: false,
 		}
 		s.SetContext(ctx)
 		exist := checkExistInRoom(username, roomID)
@@ -188,7 +192,7 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		s.Join(roomID)
 	})
 
-	server.OnEvent("/", "submitAnswer", func(s socketio.Conn, question int, answer int) {
+	socket.OnEvent("/", "submitAnswer", func(s socketio.Conn, question int, answer int) {
 		ctx := s.Context().(*RoomContext)
 		username := ctx.Username
 		roomID := ctx.RoomID
@@ -212,10 +216,10 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 			}
 		}
 		// send to all participants
-		server.BroadcastToRoom("/", roomID, "showStatistic", count)
+		socket.BroadcastToRoom("/", roomID, "showStatistic", count)
 	})
 
-	server.OnEvent("/", "showStatistic", func(s socketio.Conn, question int) {
+	socket.OnEvent("/", "showStatistic", func(s socketio.Conn, question int) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		// count answer
@@ -228,42 +232,42 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 			}
 		}
 		// send to all participants
-		server.BroadcastToRoom("/", roomID, "showStatistic", count)
+		socket.BroadcastToRoom("/", roomID, "showStatistic", count)
 	})
 
-	server.OnEvent("/", "saveSlideHistory", func(s socketio.Conn) {
-		ctx := s.Context().(*RoomContext)
-		roomID := ctx.RoomID
-		// save slide history
-		// question idx -> answer idx-> count
-		question := make(map[int]map[int]int)
-		for _, participant := range room[roomID] {
-			if participant.Answer != nil {
-				for q, a := range participant.Answer {
-					if question[q] == nil {
-						question[q] = make(map[int]int)
-					}
-					question[q][a]++
-				}
-			}
-		}
-		// save to db
-		err := serverAPI.SlideService.CreateSlideHistory(CreateSlideHistoryRequest{
-			SlideID:        roomID,
-			QuestionResult: question,
-		})
-		if err != nil {
-			s.Emit("error", fmt.Errorf("save slide history failed: %w", err))
-			return
-		}
-		s.Emit("notify", "Your slide history has been saved")
-	})
+	// socket.OnEvent("/", "saveSlideHistory", func(s socketio.Conn) {
+	// 	ctx := s.Context().(*RoomContext)
+	// 	roomID := ctx.RoomID
+	// 	// save slide history
+	// 	// question idx -> answer idx-> count
+	// 	question := make(map[int]map[int]int)
+	// 	for _, participant := range room[roomID] {
+	// 		if participant.Answer != nil {
+	// 			for q, a := range participant.Answer {
+	// 				if question[q] == nil {
+	// 					question[q] = make(map[int]int)
+	// 				}
+	// 				question[q][a]++
+	// 			}
+	// 		}
+	// 	}
+	// 	// save to db
+	// 	err := server.SlideService.CreateSlideHistory(CreateSlideHistoryRequest{
+	// 		SlideID:        roomID,
+	// 		QuestionResult: question,
+	// 	})
+	// 	if err != nil {
+	// 		s.Emit("error", fmt.Errorf("save slide history failed: %w", err))
+	// 		return
+	// 	}
+	// 	s.Emit("notify", "Your slide history has been saved")
+	// })
 
-	server.OnError("/", func(s socketio.Conn, e error) {
+	socket.OnError("/", func(s socketio.Conn, e error) {
 		fmt.Println("meet error:", e)
 	})
 
-	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
+	socket.OnDisconnect("/", func(s socketio.Conn, reason string) {
 		fmt.Println("closed", reason, s.ID())
 		for id, participants := range room {
 			for i, participant := range participants {
@@ -288,7 +292,8 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 		}
 	})
 
-	server.OnEvent("/", "chat", func(s socketio.Conn, msg string) {
+	// chat
+	socket.OnEvent("/", "chat", func(s socketio.Conn, msg string) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		username := ctx.Username
@@ -297,16 +302,76 @@ func InitSocketServer(serverAPI *Server) *socketio.Server {
 			Message:  msg,
 		})
 		// send to all participants
-		server.BroadcastToRoom("/", roomID, "chat", username, msg)
+		socket.BroadcastToRoom("/", roomID, "chat", username, msg)
 	})
 
-	server.OnEvent("/", "getChatHistory", func(s socketio.Conn) {
+	socket.OnEvent("/", "getChatHistory", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		s.Emit("chatHistory", chatRoom[roomID])
 	})
 
-	return server
+	// user question
+	socket.OnEvent("/", "postQuestion", func(s socketio.Conn, msg string) {
+		ctx := s.Context().(*RoomContext)
+		cctx := context.Background()
+		roomID := ctx.RoomID
+		username := ctx.Username
+		question, err := server.UserQuestionService.PostQuestion(cctx, PostQuestionRequest{
+			SlideID:  roomID,
+			Username: username,
+			Content:  msg,
+		})
+		if err != nil {
+			s.Emit("error", fmt.Errorf("post question failed: %w", err))
+			return
+		}
+		// send to all participants
+		socket.BroadcastToRoom("/", roomID, "postQuestion", question)
+	})
+
+	socket.OnEvent("/", "listUserQuestion", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		cctx := context.Background()
+		roomID := ctx.RoomID
+		questions, err := server.UserQuestionService.ListQuestionBySlideID(cctx, roomID)
+		if err != nil {
+			s.Emit("error", fmt.Errorf("list user question failed: %w", err))
+			return
+		}
+		s.Emit("listUserQuestion", questions)
+	})
+	socket.OnEvent("/", "upvoteQuestion", func(s socketio.Conn, questionID string) {
+		ctx := s.Context().(*RoomContext)
+		cctx := context.Background()
+		roomID := ctx.RoomID
+		question, err := server.UserQuestionService.UpvoteQuestion(cctx, questionID)
+		if err != nil {
+			s.Emit("error", fmt.Errorf("upvote question failed: %w", err))
+			return
+		}
+		// send to all participants
+		socket.BroadcastToRoom("/", roomID, "upvoteQuestion", question)
+	})
+	socket.OnEvent("/", "markQuestionAsAnswered", func(s socketio.Conn, questionID string) {
+		ctx := s.Context().(*RoomContext)
+		cctx := context.Background()
+		roomID := ctx.RoomID
+		isTeacher := ctx.IsTeacher
+		if !isTeacher {
+			s.Emit("error", fmt.Errorf("only owner and co-owner can mark question as answered"))
+			return
+		}
+		question, err := server.UserQuestionService.MarkQuestionAsAnswered(cctx, questionID)
+		if err != nil {
+			s.Emit("error", fmt.Errorf("mark question as answered failed: %w", err))
+			return
+		}
+		// send to all participants
+		socket.BroadcastToRoom("/", roomID, "markQuestionAsAnswered", question)
+	})
+
+	return socket
 }
 
 func checkExistInRoom(username, roomID string) bool {
