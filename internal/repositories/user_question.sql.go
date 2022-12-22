@@ -68,15 +68,15 @@ func (q *Queries) ListUserQuestion(ctx context.Context, slideID string) ([]UserQ
 	return items, nil
 }
 
-const markUserQuestionAnswered = `-- name: MarkUserQuestionAnswered :one
+const toggleUserQuestionAnswered = `-- name: ToggleUserQuestionAnswered :one
 UPDATE "user_question"
-SET answered = true
+SET answered = NOT answered
 WHERE question_id = $1
 RETURNING question_id, slide_id, username, content, votes, answered, created_at
 `
 
-func (q *Queries) MarkUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error) {
-	row := q.db.QueryRowContext(ctx, markUserQuestionAnswered, questionID)
+func (q *Queries) ToggleUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error) {
+	row := q.db.QueryRowContext(ctx, toggleUserQuestionAnswered, questionID)
 	var i UserQuestion
 	err := row.Scan(
 		&i.QuestionID,

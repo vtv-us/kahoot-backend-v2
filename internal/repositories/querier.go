@@ -50,8 +50,8 @@ type Querier interface {
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	ListUserQuestion(ctx context.Context, slideID string) ([]UserQuestion, error)
-	MarkUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error)
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
+	ToggleUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error)
 	UpdateAnswer(ctx context.Context, arg UpdateAnswerParams) (Answer, error)
 	UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error)
 	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error

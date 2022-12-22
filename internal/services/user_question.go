@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/vtv-us/kahoot-backend/internal/entities"
@@ -41,16 +42,18 @@ func (s *UserQuestionService) PostQuestion(ctx context.Context, req PostQuestion
 	return question.UserQuestion, nil
 }
 
-func (s *UserQuestionService) ListQuestionBySlideID(ctx context.Context, slideID string) ([]*entities.UserQuestion, error) {
+func (s *UserQuestionService) ListQuestionBySlideID(ctx context.Context, slideID string) ([]entities.UserQuestion, error) {
 	questions, err := s.DB.ListUserQuestion(ctx, slideID)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(questions)
 
-	entQuestions := make([]*entities.UserQuestion, len(questions))
+	entQuestions := make([]entities.UserQuestion, len(questions))
 	for i, q := range questions {
-		entQuestions[i] = &q.UserQuestion
+		entQuestions[i] = q.UserQuestion
 	}
+	fmt.Println(entQuestions)
 
 	return entQuestions, nil
 }
@@ -64,8 +67,8 @@ func (s *UserQuestionService) UpvoteQuestion(ctx context.Context, questionID str
 	return question.UserQuestion, nil
 }
 
-func (s *UserQuestionService) MarkQuestionAsAnswered(ctx context.Context, questionID string) (entities.UserQuestion, error) {
-	question, err := s.DB.MarkUserQuestionAnswered(ctx, questionID)
+func (s *UserQuestionService) ToggleUserQuestionAnswered(ctx context.Context, questionID string) (entities.UserQuestion, error) {
+	question, err := s.DB.ToggleUserQuestionAnswered(ctx, questionID)
 	if err != nil {
 		return entities.UserQuestion{}, err
 	}

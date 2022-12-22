@@ -30,8 +30,8 @@ SET votes = votes + 1
 WHERE question_id = $1
 RETURNING *;
 
--- name: MarkUserQuestionAnswered :one
+-- name: ToggleUserQuestionAnswered :one
 UPDATE "user_question"
-SET answered = true
+SET answered = NOT answered
 WHERE question_id = $1
 RETURNING *;

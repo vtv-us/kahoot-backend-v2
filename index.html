@@ -74,6 +74,18 @@
       socket.on("chat", function (username, msg) {
         console.log("chat", username, msg);
       });
+      socket.on("postQuestion", function (username, msg) {
+        console.log("chat", username, msg);
+      });
+      socket.on("listUserQuestion", function (username, msg) {
+        console.log("chat", username, msg);
+      });
+      socket.on("upvoteQuestion", function (username, msg) {
+        console.log("chat", username, msg);
+      });
+      socket.on("toggleUserQuestionAnswered", function (username, msg) {
+        console.log("chat", username, msg);
+      });
 
       socket.on("reply", function (msg) {
         $("#messages").append($("<li>").text(msg));

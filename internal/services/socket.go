@@ -323,7 +323,7 @@ func InitSocketServer(server *Server) *socketio.Server {
 			Content:  msg,
 		})
 		if err != nil {
-			s.Emit("error", fmt.Errorf("post question failed: %w", err))
+			s.Emit("error", fmt.Errorf("post question failed: %w", err).Error())
 			return
 		}
 		// send to all participants
@@ -336,7 +336,7 @@ func InitSocketServer(server *Server) *socketio.Server {
 		roomID := ctx.RoomID
 		questions, err := server.UserQuestionService.ListQuestionBySlideID(cctx, roomID)
 		if err != nil {
-			s.Emit("error", fmt.Errorf("list user question failed: %w", err))
+			s.Emit("error", fmt.Errorf("list user question failed: %w", err).Error())
 			return
 		}
 		s.Emit("listUserQuestion", questions)
@@ -347,28 +347,28 @@ func InitSocketServer(server *Server) *socketio.Server {
 		roomID := ctx.RoomID
 		question, err := server.UserQuestionService.UpvoteQuestion(cctx, questionID)
 		if err != nil {
-			s.Emit("error", fmt.Errorf("upvote question failed: %w", err))
+			s.Emit("error", fmt.Errorf("upvote question failed: %w", err).Error())
 			return
 		}
 		// send to all participants
 		socket.BroadcastToRoom("/", roomID, "upvoteQuestion", question)
 	})
-	socket.OnEvent("/", "markQuestionAsAnswered", func(s socketio.Conn, questionID string) {
+	socket.OnEvent("/", "toggleUserQuestionAnswered", func(s socketio.Conn, questionID string) {
 		ctx := s.Context().(*RoomContext)
 		cctx := context.Background()
 		roomID := ctx.RoomID
 		isTeacher := ctx.IsTeacher
 		if !isTeacher {
-			s.Emit("error", fmt.Errorf("only owner and co-owner can mark question as answered"))
+			s.Emit("error", "only owner and co-owner can toggle user question answered")
 			return
 		}
-		question, err := server.UserQuestionService.MarkQuestionAsAnswered(cctx, questionID)
+		question, err := server.UserQuestionService.ToggleUserQuestionAnswered(cctx, questionID)
 		if err != nil {
-			s.Emit("error", fmt.Errorf("mark question as answered failed: %w", err))
+			s.Emit("error", fmt.Errorf("toggle user question answered failed: %w", err).Error())
 			return
 		}
 		// send to all participants
-		socket.BroadcastToRoom("/", roomID, "markQuestionAsAnswered", question)
+		socket.BroadcastToRoom("/", roomID, "toggleUserQuestionAnswered", question)
 	})
 
 	return socket
