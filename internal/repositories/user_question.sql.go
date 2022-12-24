@@ -34,7 +34,7 @@ const listUserQuestion = `-- name: ListUserQuestion :many
 SELECT question_id, slide_id, username, content, votes, answered, created_at
 FROM "user_question"
 WHERE slide_id = $1
-ORDER BY votes DESC, created_at DESC
+ORDER BY created_at DESC
 `
 
 func (q *Queries) ListUserQuestion(ctx context.Context, slideID string) ([]UserQuestion, error) {

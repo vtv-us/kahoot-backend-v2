@@ -22,7 +22,7 @@ WHERE question_id = $1;
 SELECT *
 FROM "user_question"
 WHERE slide_id = $1
-ORDER BY votes DESC, created_at DESC;
+ORDER BY created_at DESC;
 
 -- name: UpvoteUserQuestion :one
 UPDATE "user_question"
