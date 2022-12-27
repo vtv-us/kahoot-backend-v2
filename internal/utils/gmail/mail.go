@@ -70,3 +70,22 @@ func (s *SendgridService) SendEmailForInvite(toEmail string, groupID string, gro
 	_, err := s.Client.Send(message)
 	return err
 }
+
+func (s *SendgridService) SendEmailForForgotPassword(email string, userID, verifyCode string) error {
+	emailContent := EmailContent{
+		From: &mail.Email{
+			Name:    "Kahoot",
+			Address: s.EmailFrom,
+		},
+		To: &mail.Email{
+			Name:    "User",
+			Address: email,
+		},
+		Subject:          "Reset your password",
+		PlainTextContent: fmt.Sprintf(`Click on the following link to reset your password: %s/reset-password/%s/%s`, s.Frontend, userID, verifyCode),
+		HtmlContent:      fmt.Sprintf(`<p>Click on the following link to reset your password: <a href="%s/reset-password/%s/%s">link</a></p>`, s.Frontend, userID, verifyCode),
+	}
+	message := mail.NewSingleEmail(emailContent.From, emailContent.Subject, emailContent.To, emailContent.PlainTextContent, emailContent.HtmlContent)
+	_, err := s.Client.Send(message)
+	return err
+}

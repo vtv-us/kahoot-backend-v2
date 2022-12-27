@@ -467,3 +467,89 @@ func (s *AuthService) ChangePassword(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, utils.SuccessResponse())
 }
+
+type forgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (s *AuthService) ForgotPassword(ctx *gin.Context) {
+	var req forgotPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	verifyCode := uuid.NewString()
+	user, err = s.DB.UpdateVerifiedCode(ctx, repositories.UpdateVerifiedCodeParams{
+		UserID:       user.UserID,
+		VerifiedCode: verifyCode,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	// send email
+	err = s.EmailService.SendEmailForForgotPassword(req.Email, user.UserID, verifyCode)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
+}
+
+type resetPasswordRequest struct {
+	UserID   string `json:"user_id" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Code     string `json:"code" binding:"required"`
+}
+
+func (s *AuthService) ResetPassword(ctx *gin.Context) {
+	var req resetPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUser(ctx, req.UserID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("user not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	if user.VerifiedCode != req.Code {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(fmt.Errorf("invalid code")))
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+	user, err = s.DB.UpdatePassword(ctx, repositories.UpdatePasswordParams{
+		UserID:   user.UserID,
+		Password: hashedPassword,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
+}

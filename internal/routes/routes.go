@@ -24,6 +24,8 @@ func InitRoutes(server *services.Server, socket *socketio.Server, c *utils.Confi
 	route.POST("/auth/login", server.AuthService.Login)
 	route.GET("/auth/verify/:email/:code", server.AuthService.Verify)
 	route.POST("/auth/resend/:email", server.AuthService.ResendEmail)
+	route.POST("/auth/forgot-password", server.AuthService.ForgotPassword)
+	route.POST("/auth/reset-password", server.AuthService.ResetPassword)
 
 	route.GET("/auth/:provider", server.AuthService.LoginProvider)
 	route.GET("/auth/:provider/callback", server.AuthService.ProviderCallback)
