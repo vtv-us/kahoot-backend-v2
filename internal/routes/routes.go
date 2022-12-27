@@ -49,6 +49,7 @@ func InitRoutes(server *services.Server, socket *socketio.Server, c *utils.Confi
 	group.POST("/:groupid/leave", server.GroupService.LeaveGroup)
 	group.POST("/kick", server.GroupService.KickMember)
 	group.POST("/invite", server.GroupService.InviteMember)
+	group.DELETE("/:groupid", server.GroupService.DeleteGroup)
 
 	user := route.Group("/user")
 	user.Use(a.AuthRequired)

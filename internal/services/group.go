@@ -441,3 +441,31 @@ func (s *GroupService) checkUserInGroup(ctx *gin.Context, groupID string, userID
 
 	return nil
 }
+
+type deleteGroupRequest struct {
+	GroupID string `uri:"groupid" binding:"required"`
+}
+
+func (s *GroupService) DeleteGroup(ctx *gin.Context) {
+	userID := ctx.GetString(constants.Token_USER_ID)
+
+	var req deleteGroupRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	err := s.checkOwnerPermission(ctx, req.GroupID, userID)
+	if err != nil {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
+		return
+	}
+
+	err = s.DB.DeleteGroup(ctx, req.GroupID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
+}
