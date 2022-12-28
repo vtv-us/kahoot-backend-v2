@@ -65,6 +65,11 @@ func InitRoutes(server *services.Server, socket *socketio.Server, c *utils.Confi
 	slide.GET("", server.SlideService.GetSlideByUserID)
 	slide.PUT("", server.SlideService.UpdateSlide)
 	slide.DELETE("/:slide_id", server.SlideService.DeleteSlide)
+	collab := slide.Group("/collab")
+	collab.POST("", server.SlideService.AddCollaborator)
+	collab.GET("/:slide_id", server.SlideService.GetCollaboratorBySlideID)
+	collab.GET("/user/:user_id", server.SlideService.GetCollaboratorByUserID)
+	collab.POST("/remove", server.SlideService.RemoveCollaborator)
 
 	question := route.Group("/question")
 	question.GET("/:question_id", server.QuestionService.GetQuestionByID)

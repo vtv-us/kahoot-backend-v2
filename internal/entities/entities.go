@@ -27,6 +27,12 @@ type AnswerHistory struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+type Collab struct {
+	UserID    string    `json:"user_id"`
+	SlideID   string    `json:"slide_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Group struct {
 	GroupID     string    `json:"group_id"`
 	GroupName   string    `json:"group_name"`
@@ -44,6 +50,7 @@ type Question struct {
 	LongDescription string    `json:"long_description"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
+	Type            string    `json:"type"`
 }
 
 type Slide struct {

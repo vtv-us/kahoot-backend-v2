@@ -96,7 +96,7 @@ func (s *SlideService) UpdateSlide(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.SlideID)
+	err := s.checkOwnerPermission(ctx, req.SlideID, "")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
 		return
@@ -126,7 +126,7 @@ func (s *SlideService) DeleteSlide(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.SlideID)
+	err := s.checkOwnerPermission(ctx, req.SlideID, "")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
 		return
@@ -141,17 +141,137 @@ func (s *SlideService) DeleteSlide(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, utils.SuccessResponse())
 }
 
-func (s *SlideService) checkOwnerPermission(ctx *gin.Context, slideID string) error {
+func (s *SlideService) checkOwnerPermission(ctx *gin.Context, slideID string, opt string) error {
 	userID := ctx.GetString(constants.Token_USER_ID)
+
+	isAllowed := false
 
 	slide, err := s.DB.GetSlide(ctx, slideID)
 	if err != nil {
 		return err
 	}
 
-	if slide.Owner != userID {
-		return fmt.Errorf("you are not the owner of this slide")
+	if slide.Owner == userID {
+		isAllowed = true
+	}
+
+	if opt == constants.Role_COLLABORATOR {
+		isCollab, err := s.DB.CheckIsCollab(ctx, repositories.CheckIsCollabParams{
+			SlideID: slideID,
+			UserID:  userID,
+		})
+		if err != nil {
+			return err
+		}
+
+		if isCollab {
+			isAllowed = true
+		}
+	}
+
+	if !isAllowed {
+		return fmt.Errorf("you don't have permission to access this slide")
 	}
 
 	return nil
+}
+
+type addCollaboratorRequest struct {
+	SlideID string `json:"slide_id" binding:"required"`
+	UserID  string `json:"user_id" binding:"required"`
+}
+
+func (s *SlideService) AddCollaborator(ctx *gin.Context) {
+	var req addCollaboratorRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	err := s.checkOwnerPermission(ctx, req.SlideID, constants.Role_OWNER)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
+
+	err = s.DB.AddCollab(ctx, repositories.AddCollabParams{
+		SlideID: req.SlideID,
+		UserID:  req.UserID,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
+}
+
+type getCollaboratorBySlideIDRequest struct {
+	SlideID string `uri:"slide_id" binding:"required"`
+}
+
+func (s *SlideService) GetCollaboratorBySlideID(ctx *gin.Context) {
+	var req getCollaboratorBySlideIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	collabs, err := s.DB.ListCollabBySlide(ctx, req.SlideID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, collabs)
+}
+
+type getCollaboratorByUserIDRequest struct {
+	UserID string `uri:"user_id" binding:"required"`
+}
+
+func (s *SlideService) GetCollaboratorByUserID(ctx *gin.Context) {
+	var req getCollaboratorByUserIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	collabs, err := s.DB.ListCollab(ctx, req.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, collabs)
+}
+
+type removeCollaboratorRequest struct {
+	SlideID string `json:"slide_id" binding:"required"`
+	UserID  string `json:"user_id" binding:"required"`
+}
+
+func (s *SlideService) RemoveCollaborator(ctx *gin.Context) {
+	var req removeCollaboratorRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	err := s.checkOwnerPermission(ctx, req.SlideID, constants.Role_OWNER)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
+
+	err = s.DB.RemoveCollab(ctx, repositories.RemoveCollabParams{
+		SlideID: req.SlideID,
+		UserID:  req.UserID,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse())
 }

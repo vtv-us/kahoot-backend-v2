@@ -1,6 +1,6 @@
-create function "check_true_index_answer" () returns trigger as $$
+create or replace function "check_true_index_answer" () returns trigger as $$
 begin
-    if not exists (select 1 from "answer" where "question_id" = new."question_id" and ("index" = new."index" - 1 or new."index" = 1)) then
+    if new."index" != (select max("index") from "answer" where "question_id" = new."question_id") + 1 then
         raise exception 'wrong index';
     end if;
     return new;
@@ -8,9 +8,9 @@ end;$$ LANGUAGE plpgsql;
 
 create trigger "check_true_index_answer" before insert or update on "answer" for each row execute procedure "check_true_index_answer"();
 
-create function "check_true_index_question" () returns trigger as $$
+create or replace function "check_true_index_question" () returns trigger as $$
 begin
-    if not exists (select 1 from "question" where "slide_id" = new."slide_id" and ("index" = new."index" - 1 or new."index" = 1)) then
+    if new."index" != (select max("index") from "question" where "slide_id" = new."slide_id") + 1 then
         raise exception 'wrong index';
     end if;
     return new;

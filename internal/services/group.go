@@ -191,7 +191,7 @@ func (s *GroupService) AssignRole(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.GroupID, constants.Role_OWNER)
+	err := checkOwnerPermission(ctx, s.DB, req.GroupID, constants.Role_OWNER)
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
 		return
@@ -222,10 +222,10 @@ func (s *GroupService) AssignRole(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, utils.SuccessResponse())
 }
 
-func (s *GroupService) checkOwnerPermission(ctx *gin.Context, groupID string, opt string) error {
+func checkOwnerPermission(ctx *gin.Context, db repositories.Store, groupID string, opt string) error {
 	userID := ctx.GetString(constants.Token_USER_ID)
 
-	role, err := s.DB.GetRoleInGroup(ctx, repositories.GetRoleInGroupParams{
+	role, err := db.GetRoleInGroup(ctx, repositories.GetRoleInGroupParams{
 		GroupID: groupID,
 		UserID:  userID,
 	})
@@ -331,7 +331,7 @@ func (s *GroupService) KickMember(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.GroupID, "")
+	err := checkOwnerPermission(ctx, s.DB, req.GroupID, "")
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
 		return
@@ -453,7 +453,7 @@ func (s *GroupService) DeleteGroup(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.GroupID, constants.Role_OWNER)
+	err := checkOwnerPermission(ctx, s.DB, req.GroupID, constants.Role_OWNER)
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
 		return

@@ -9,7 +9,9 @@ import (
 )
 
 type Querier interface {
+	AddCollab(ctx context.Context, arg AddCollabParams) error
 	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
+	CheckIsCollab(ctx context.Context, arg CheckIsCollabParams) (bool, error)
 	CheckUserInGroup(ctx context.Context, arg CheckUserInGroupParams) (bool, error)
 	CountAnswerByQuestionID(ctx context.Context, questionID string) ([]CountAnswerByQuestionIDRow, error)
 	CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error)
@@ -44,12 +46,15 @@ type Querier interface {
 	ListAnswerHistoryByAnswerID(ctx context.Context, answerID string) ([]AnswerHistory, error)
 	ListAnswerHistoryByQuestionID(ctx context.Context, questionID string) ([]AnswerHistory, error)
 	ListAnswerHistoryBySlideID(ctx context.Context, slideID string) ([]AnswerHistory, error)
+	ListCollab(ctx context.Context, userID string) ([]Slide, error)
+	ListCollabBySlide(ctx context.Context, slideID string) ([]User, error)
 	ListEmailInGroup(ctx context.Context, groupID string) ([]string, error)
 	ListGroupJoined(ctx context.Context, userID string) ([]ListGroupJoinedRow, error)
 	ListGroupOwned(ctx context.Context, userID string) ([]ListGroupOwnedRow, error)
 	ListMemberInGroup(ctx context.Context, groupID string) ([]ListMemberInGroupRow, error)
 	ListUser(ctx context.Context, arg ListUserParams) ([]User, error)
 	ListUserQuestion(ctx context.Context, slideID string) ([]UserQuestion, error)
+	RemoveCollab(ctx context.Context, arg RemoveCollabParams) error
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
 	ToggleUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error)
 	UpdateAnswer(ctx context.Context, arg UpdateAnswerParams) (Answer, error)

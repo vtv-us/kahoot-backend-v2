@@ -6,6 +6,7 @@ INSERT INTO "question" (
     raw_question,
     meta,
     long_description,
+    type,
     created_at,
     updated_at
 ) VALUES (
@@ -15,6 +16,7 @@ INSERT INTO "question" (
     $4,
     $5,
     $6,
+    $7,
     now(),
     now()
 )

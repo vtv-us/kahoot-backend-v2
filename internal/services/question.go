@@ -29,6 +29,7 @@ type createQuestionRequest struct {
 	RawQuestion     string `json:"raw_question" binding:"required"`
 	Meta            string `json:"meta"`
 	LongDescription string `json:"long_description"`
+	Type            string `json:"type" binding:"required" oneof:"multiple-choice paragraph heading"`
 }
 
 func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
@@ -45,6 +46,7 @@ func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
 		RawQuestion:     req.RawQuestion,
 		Meta:            req.Meta,
 		LongDescription: req.LongDescription,
+		Type:            req.Type,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
