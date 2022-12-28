@@ -25,6 +25,26 @@ func NewUserService(db repositories.Store, cloudinary *cloudinary.CloudinaryServ
 	}
 }
 
+type getUserByEmailRequest struct {
+	Email string `uri:"email" binding:"required"`
+}
+
+func (s *UserService) GetUserByEmail(ctx *gin.Context) {
+	var req getUserByEmailRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	user, err := s.DB.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
+}
+
 type getProfileResponse struct {
 	User userResponse `json:"user"`
 }

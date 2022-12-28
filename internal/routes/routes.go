@@ -52,6 +52,7 @@ func InitRoutes(server *services.Server, socket *socketio.Server, c *utils.Confi
 	group.DELETE("/:groupid", server.GroupService.DeleteGroup)
 
 	user := route.Group("/user")
+	user.GET("/:email", server.UserService.GetUserByEmail)
 	user.Use(a.AuthRequired)
 	user.GET("/profile", server.UserService.GetProfile)
 	user.GET("/profile/:userid", server.UserService.GetProfileByUserID)
