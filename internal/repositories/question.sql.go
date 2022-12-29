@@ -191,6 +191,7 @@ UPDATE "question" SET
     meta = $3,
     long_description = $4,
     index = $5,
+    type = $6,
     updated_at = now()
 WHERE id = $1
 RETURNING id, slide_id, index, raw_question, meta, long_description, created_at, updated_at, type
@@ -202,6 +203,7 @@ type UpdateQuestionParams struct {
 	Meta            string `json:"meta"`
 	LongDescription string `json:"long_description"`
 	Index           int16  `json:"index"`
+	Type            string `json:"type"`
 }
 
 func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error) {
@@ -211,6 +213,7 @@ func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) 
 		arg.Meta,
 		arg.LongDescription,
 		arg.Index,
+		arg.Type,
 	)
 	var i Question
 	err := row.Scan(

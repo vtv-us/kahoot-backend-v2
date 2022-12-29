@@ -6,7 +6,7 @@ begin
     return new;
 end;$$ LANGUAGE plpgsql;
 
-create trigger "check_true_index_answer" before insert or update on "answer" for each row execute procedure "check_true_index_answer"();
+create trigger "check_true_index_answer" before insert on "answer" for each row execute procedure "check_true_index_answer"();
 
 create or replace function "check_true_index_question" () returns trigger as $$
 begin
@@ -16,7 +16,7 @@ begin
     return new;
 end;$$ LANGUAGE plpgsql;
 
-create trigger "check_true_index_question" before insert or update on "question" for each row execute procedure "check_true_index_question"();
+create trigger "check_true_index_question" before insert on "question" for each row execute procedure "check_true_index_question"();
 
 create function "auto_decrease_index_when_delete_question" () returns trigger as $$
 begin

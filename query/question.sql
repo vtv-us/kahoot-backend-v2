@@ -43,6 +43,7 @@ UPDATE "question" SET
     meta = $3,
     long_description = $4,
     index = $5,
+    type = $6,
     updated_at = now()
 WHERE id = $1
 RETURNING *;
