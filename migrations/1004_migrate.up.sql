@@ -8,14 +8,6 @@ create table "answer_history" (
     constraint "answer_history_pkey" primary key ("username", "slide_id", "question_id")
 );
 
-create function "slide_delete_trigger" () returns trigger as $$
-begin
-    delete from "answer_history" where "slide_id" = old."id";
-    return nil;
-end;$$ LANGUAGE plpgsql;
-
-create trigger "slide_delete_trigger" before delete on "slide" for each row execute procedure "slide_delete_trigger"();
-
 create function "check_question_index_exists" () returns trigger as $$
 begin
     if exists (select 1 from "question" where "slide_id" = new."slide_id" and "index" = new."index" and "id" != new."id") then
