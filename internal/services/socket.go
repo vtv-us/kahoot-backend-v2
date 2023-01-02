@@ -40,9 +40,6 @@ type PresentationNotification struct {
 	GroupID string
 }
 
-// [ID] -> List of chat messages
-type ChatRoom map[string][]ChatMessage
-
 var room Room
 
 func InitSocketServer(server *Server) *socketio.Server {
@@ -51,7 +48,6 @@ func InitSocketServer(server *Server) *socketio.Server {
 
 	room = make(Room)
 	roomState := make(RoomState)
-	chatRoom := make(ChatRoom)
 	isRoomGroup := make(IsRoomGroup)
 	roomGroup := make(RoomGroup)
 
@@ -223,47 +219,49 @@ func InitSocketServer(server *Server) *socketio.Server {
 		s.Join(roomID)
 	})
 
-	socket.OnEvent("/", "submitAnswer", func(s socketio.Conn, question int, answer int) {
+	socket.OnEvent("/", "submitAnswer", func(s socketio.Conn, question string, answer string) {
 		ctx := s.Context().(*RoomContext)
 		username := ctx.Username
 		roomID := ctx.RoomID
 		fmt.Println("submitAnswer:", username, roomID, answer)
-		for i, participant := range room[roomID] {
-			if participant.Username == username {
-				if participant.Answer == nil {
-					participant.Answer = make(map[int]int)
-				}
-				participant.Answer[question] = answer
-				room[roomID][i] = participant
-			}
+		err := server.SlideService.SaveAnswerHistory(username, roomID, question, answer)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
 		}
 		s.Emit("notify", "Your answer has been submitted")
-		count := make(map[int]int)
-		for _, participant := range room[roomID] {
-			if participant.Answer != nil {
-				if participant.Answer[question] != 0 {
-					count[participant.Answer[question]]++
-				}
-			}
+		count, err := server.SlideService.CountAnswerByQuestionID(question)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
 		}
 		// send to all participants
 		socket.BroadcastToRoom("/", roomID, "showStatistic", count)
+		result, err := server.SlideService.ListAnswerHistoryByQuestionID(question)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
+		socket.BroadcastToRoom("/", roomID, "resultList", result)
 	})
 
-	socket.OnEvent("/", "showStatistic", func(s socketio.Conn, question int) {
+	socket.OnEvent("/", "showStatistic", func(s socketio.Conn, question string) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		// count answer
-		count := make(map[int]int)
-		for _, participant := range room[roomID] {
-			if participant.Answer != nil {
-				if participant.Answer[question] != 0 {
-					count[participant.Answer[question]]++
-				}
-			}
+		count, err := server.SlideService.CountAnswerByQuestionID(question)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
 		}
 		// send to all participants
 		socket.BroadcastToRoom("/", roomID, "showStatistic", count)
+		result, err := server.SlideService.ListAnswerHistoryByQuestionID(question)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
+		socket.BroadcastToRoom("/", roomID, "resultList", result)
 	})
 
 	// socket.OnEvent("/", "saveSlideHistory", func(s socketio.Conn) {
@@ -328,10 +326,6 @@ func InitSocketServer(server *Server) *socketio.Server {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
 		username := ctx.Username
-		chatRoom[roomID] = append(chatRoom[roomID], ChatMessage{
-			Username: username,
-			Message:  msg,
-		})
 		if err := server.SlideService.SaveChatMsg(roomID, username, msg); err != nil {
 			s.Emit("error", fmt.Errorf("save chat message failed: %w", err))
 			return

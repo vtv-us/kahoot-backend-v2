@@ -86,6 +86,9 @@
       socket.on("toggleUserQuestionAnswered", function (username, msg) {
         console.log("chat", username, msg);
       });
+      socket.on("chatHistory", function (msg) {
+        console.log("chatHistory", msg);
+      });
 
       socket.on("reply", function (msg) {
         $("#messages").append($("<li>").text(msg));
