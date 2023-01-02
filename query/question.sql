@@ -53,3 +53,20 @@ DELETE FROM "question" WHERE id = $1;
 
 -- name: DeleteQuestionsBySlide :exec
 DELETE FROM "question" WHERE slide_id = $1;
+
+-- name: CheckQuestionPermission :one
+SELECT EXISTS (
+    SELECT 1
+    FROM "question" q
+    JOIN "slide" s ON q.slide_id = s.id
+    WHERE q.id = $1
+    AND (
+        s.owner = $2
+        OR EXISTS (
+            SELECT 1
+            FROM "collab"
+            WHERE user_id = $2
+            AND slide_id = s.id
+        )
+    )
+) AS is_permitted;

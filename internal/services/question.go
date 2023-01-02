@@ -1,12 +1,10 @@
 package services
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/vtv-us/kahoot-backend/internal/constants"
 	"github.com/vtv-us/kahoot-backend/internal/repositories"
 	"github.com/vtv-us/kahoot-backend/internal/utils"
 )
@@ -36,6 +34,11 @@ func (s *QuestionService) CreateQuestion(ctx *gin.Context) {
 	var req createQuestionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+		return
+	}
+
+	if err := checkSlidePermission(ctx, s.DB, req.SlideID); err != nil {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
 		return
 	}
 
@@ -112,7 +115,7 @@ func (s *QuestionService) UpdateQuestion(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.QuestionID)
+	err := checkQuestionPermission(ctx, s.DB, req.QuestionID)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
 		return
@@ -145,7 +148,7 @@ func (s *QuestionService) DeleteQuestion(ctx *gin.Context) {
 		return
 	}
 
-	err := s.checkOwnerPermission(ctx, req.QuestionID)
+	err := checkQuestionPermission(ctx, s.DB, req.QuestionID)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
 		return
@@ -158,19 +161,4 @@ func (s *QuestionService) DeleteQuestion(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessResponse())
-}
-
-func (s *QuestionService) checkOwnerPermission(ctx *gin.Context, questionID string) error {
-	userID := ctx.GetString(constants.Token_USER_ID)
-
-	owner, err := s.DB.GetOwnerOfQuestion(ctx, questionID)
-	if err != nil {
-		return err
-	}
-
-	if owner != userID {
-		return fmt.Errorf("you are not the owner of this question")
-	}
-
-	return nil
 }

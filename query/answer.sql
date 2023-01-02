@@ -44,3 +44,23 @@ DELETE FROM "answer" WHERE question_id = $1;
 DELETE FROM "answer" WHERE question_id IN (
     SELECT id FROM "question" WHERE slide_id = $1
 );
+
+-- name: CheckAnswerPermission :one
+-- Check if the user has permission to access the answer or collaborator
+-- of the slide that the answer belongs to.
+SELECT EXISTS (
+    SELECT 1
+    FROM "answer" a
+    JOIN "question" q ON a.question_id = q.id
+    JOIN "slide" s ON q.slide_id = s.id
+    WHERE a.id = $1
+    AND (
+        s.owner = $2
+        OR EXISTS (
+            SELECT 1
+            FROM "collab"
+            WHERE user_id = $2
+            AND slide_id = s.id
+        )
+    )
+) AS has_permission;

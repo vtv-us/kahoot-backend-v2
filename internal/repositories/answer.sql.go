@@ -9,6 +9,39 @@ import (
 	"context"
 )
 
+const checkAnswerPermission = `-- name: CheckAnswerPermission :one
+SELECT EXISTS (
+    SELECT 1
+    FROM "answer" a
+    JOIN "question" q ON a.question_id = q.id
+    JOIN "slide" s ON q.slide_id = s.id
+    WHERE a.id = $1
+    AND (
+        s.owner = $2
+        OR EXISTS (
+            SELECT 1
+            FROM "collab"
+            WHERE user_id = $2
+            AND slide_id = s.id
+        )
+    )
+) AS has_permission
+`
+
+type CheckAnswerPermissionParams struct {
+	ID    string `json:"id"`
+	Owner string `json:"owner"`
+}
+
+// Check if the user has permission to access the answer or collaborator
+// of the slide that the answer belongs to.
+func (q *Queries) CheckAnswerPermission(ctx context.Context, arg CheckAnswerPermissionParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkAnswerPermission, arg.ID, arg.Owner)
+	var has_permission bool
+	err := row.Scan(&has_permission)
+	return has_permission, err
+}
+
 const createAnswer = `-- name: CreateAnswer :one
 INSERT INTO "answer" (
     id,

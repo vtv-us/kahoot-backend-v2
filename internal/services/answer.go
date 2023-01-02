@@ -34,6 +34,11 @@ func (s *AnswerService) CreateAnswer(ctx *gin.Context) {
 		return
 	}
 
+	if err := checkQuestionPermission(ctx, s.DB, req.QuestionID); err != nil {
+		ctx.JSON(http.StatusForbidden, utils.ErrorResponse(err))
+		return
+	}
+
 	question, err := s.DB.CreateAnswer(ctx, repositories.CreateAnswerParams{
 		ID:         uuid.NewString(),
 		QuestionID: req.QuestionID,
@@ -101,6 +106,11 @@ func (s *AnswerService) UpdateAnswer(ctx *gin.Context) {
 		return
 	}
 
+	if err := checkAnswerPermission(ctx, s.DB, req.AnswerID); err != nil {
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
+
 	question, err := s.DB.UpdateAnswer(ctx, repositories.UpdateAnswerParams{
 		ID:        req.AnswerID,
 		Index:     req.Index,
@@ -125,7 +135,10 @@ func (s *AnswerService) DeleteAnswer(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: check ownership
+	if err := checkAnswerPermission(ctx, s.DB, req.AnswerID); err != nil {
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
 
 	err := s.DB.DeleteAnswer(ctx, req.AnswerID)
 	if err != nil {

@@ -27,3 +27,19 @@ RETURNING *;
 
 -- name: DeleteSlide :exec
 DELETE FROM "slide" WHERE id = $1;
+
+-- name: CheckSlidePermission :one
+SELECT EXISTS (
+    SELECT 1
+    FROM "slide"
+    WHERE id = $1
+    AND (
+        owner = $2
+        OR EXISTS (
+            SELECT 1
+            FROM "collab"
+            WHERE user_id = $2
+            AND slide_id = $1
+        )
+    )
+) AS is_permitted;

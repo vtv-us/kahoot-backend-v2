@@ -9,6 +9,36 @@ import (
 	"context"
 )
 
+const checkQuestionPermission = `-- name: CheckQuestionPermission :one
+SELECT EXISTS (
+    SELECT 1
+    FROM "question" q
+    JOIN "slide" s ON q.slide_id = s.id
+    WHERE q.id = $1
+    AND (
+        s.owner = $2
+        OR EXISTS (
+            SELECT 1
+            FROM "collab"
+            WHERE user_id = $2
+            AND slide_id = s.id
+        )
+    )
+) AS is_permitted
+`
+
+type CheckQuestionPermissionParams struct {
+	ID    string `json:"id"`
+	Owner string `json:"owner"`
+}
+
+func (q *Queries) CheckQuestionPermission(ctx context.Context, arg CheckQuestionPermissionParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkQuestionPermission, arg.ID, arg.Owner)
+	var is_permitted bool
+	err := row.Scan(&is_permitted)
+	return is_permitted, err
+}
+
 const createQuestion = `-- name: CreateQuestion :one
 INSERT INTO "question" (
     id,

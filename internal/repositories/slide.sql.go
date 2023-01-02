@@ -9,6 +9,35 @@ import (
 	"context"
 )
 
+const checkSlidePermission = `-- name: CheckSlidePermission :one
+SELECT EXISTS (
+    SELECT 1
+    FROM "slide"
+    WHERE id = $1
+    AND (
+        owner = $2
+        OR EXISTS (
+            SELECT 1
+            FROM "collab"
+            WHERE user_id = $2
+            AND slide_id = $1
+        )
+    )
+) AS is_permitted
+`
+
+type CheckSlidePermissionParams struct {
+	ID    string `json:"id"`
+	Owner string `json:"owner"`
+}
+
+func (q *Queries) CheckSlidePermission(ctx context.Context, arg CheckSlidePermissionParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkSlidePermission, arg.ID, arg.Owner)
+	var is_permitted bool
+	err := row.Scan(&is_permitted)
+	return is_permitted, err
+}
+
 const createSlide = `-- name: CreateSlide :one
 INSERT INTO "slide" (
     id,

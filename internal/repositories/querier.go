@@ -11,7 +11,12 @@ import (
 type Querier interface {
 	AddCollab(ctx context.Context, arg AddCollabParams) error
 	AddMemberToGroup(ctx context.Context, arg AddMemberToGroupParams) error
+	// Check if the user has permission to access the answer or collaborator
+	// of the slide that the answer belongs to.
+	CheckAnswerPermission(ctx context.Context, arg CheckAnswerPermissionParams) (bool, error)
 	CheckIsCollab(ctx context.Context, arg CheckIsCollabParams) (bool, error)
+	CheckQuestionPermission(ctx context.Context, arg CheckQuestionPermissionParams) (bool, error)
+	CheckSlidePermission(ctx context.Context, arg CheckSlidePermissionParams) (bool, error)
 	CheckUserInGroup(ctx context.Context, arg CheckUserInGroupParams) (bool, error)
 	CountAnswerByQuestionID(ctx context.Context, questionID string) ([]CountAnswerByQuestionIDRow, error)
 	CreateAnswer(ctx context.Context, arg CreateAnswerParams) (Answer, error)
