@@ -35,6 +35,11 @@ type IsRoomGroup map[string]bool
 type RoomGroup map[string]string
 type RoomState map[string]int
 
+type PresentationNotification struct {
+	SlideID string
+	GroupID string
+}
+
 // [ID] -> List of chat messages
 type ChatRoom map[string][]ChatMessage
 
@@ -88,7 +93,11 @@ func InitSocketServer(server *Server) *socketio.Server {
 				return
 			}
 			roomGroup[roomID] = groupID
-			socket.BroadcastToRoom("/notification", groupID, "notify", "Room "+roomID+" is now active for group "+groupID)
+
+			socket.BroadcastToRoom("/notification", groupID, "notify", PresentationNotification{
+				SlideID: roomID,
+				GroupID: groupID,
+			})
 		}
 		ctx := &RoomContext{
 			Username:  username,
