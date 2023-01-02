@@ -6,6 +6,7 @@ import (
 
 	socketio "github.com/googollee/go-socket.io"
 	"github.com/vtv-us/kahoot-backend/internal/constants"
+	"github.com/vtv-us/kahoot-backend/internal/repositories"
 )
 
 type RoomContext struct {
@@ -30,6 +31,8 @@ type ChatMessage struct {
 
 // [ID] -> List of participants
 type Room map[string][]Participant
+type IsRoomGroup map[string]bool
+type RoomGroup map[string]string
 type RoomState map[string]int
 
 // [ID] -> List of chat messages
@@ -44,6 +47,8 @@ func InitSocketServer(server *Server) *socketio.Server {
 	room = make(Room)
 	roomState := make(RoomState)
 	chatRoom := make(ChatRoom)
+	isRoomGroup := make(IsRoomGroup)
+	roomGroup := make(RoomGroup)
 
 	socket.OnConnect("/", func(s socketio.Conn) error {
 		fmt.Println("connected:", s.ID())
@@ -74,7 +79,17 @@ func InitSocketServer(server *Server) *socketio.Server {
 		s.Close()
 	})
 
-	socket.OnEvent("/", "host", func(s socketio.Conn, username, roomID string) {
+	socket.OnEvent("/", "host", func(s socketio.Conn, username, roomID string, isGroup bool, groupID string, token string) {
+		isRoomGroup[roomID] = isGroup
+		if isGroup {
+			err := checkUserInGroup(server, groupID, token)
+			if err != nil {
+				s.Emit("error", err.Error())
+				return
+			}
+			roomGroup[roomID] = groupID
+			socket.BroadcastToRoom("/notification", groupID, "notify", "Room "+roomID+" is now active for group "+groupID)
+		}
 		ctx := &RoomContext{
 			Username:  username,
 			RoomID:    roomID,
@@ -161,8 +176,15 @@ func InitSocketServer(server *Server) *socketio.Server {
 		}
 	})
 
-	socket.OnEvent("/", "join", func(s socketio.Conn, username, roomID string) {
+	socket.OnEvent("/", "join", func(s socketio.Conn, username, roomID, token string) {
 		fmt.Println(s.ID(), "join room", roomID)
+		if isRoomGroup[roomID] {
+			err := checkUserInGroup(server, roomGroup[roomID], token)
+			if err != nil {
+				s.Emit("error", err.Error())
+				return
+			}
+		}
 		ctx := &RoomContext{
 			Username:  username,
 			RoomID:    roomID,
@@ -371,6 +393,22 @@ func InitSocketServer(server *Server) *socketio.Server {
 		socket.BroadcastToRoom("/", roomID, "toggleUserQuestionAnswered", question)
 	})
 
+	// server notification
+	socket.OnEvent("/notification", "join", func(s socketio.Conn, groupID string, token string) {
+		if groupID == "" {
+			s.Emit("error", "group id is required")
+			return
+		}
+
+		err := checkUserInGroup(server, groupID, token)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
+
+		s.Join(groupID)
+	})
+
 	return socket
 }
 
@@ -393,4 +431,24 @@ func checkTeacherPermission(username, roomID string) error {
 		}
 	}
 	return fmt.Errorf("you are not in the room")
+}
+
+func checkUserInGroup(server *Server, groupID, token string) error {
+	// check token
+	res, err := server.AuthService.JWT.ValidateToken(token)
+	if err != nil {
+		return fmt.Errorf("invalid token: %w", err)
+	}
+
+	isUserInGroup, err := server.GroupService.DB.CheckUserInGroup(context.Background(), repositories.CheckUserInGroupParams{
+		GroupID: groupID,
+		UserID:  res.UserID,
+	})
+	if err != nil {
+		return fmt.Errorf("check user in group failed: %w", err)
+	}
+	if !isUserInGroup {
+		return fmt.Errorf("you are not in the group")
+	}
+	return nil
 }
