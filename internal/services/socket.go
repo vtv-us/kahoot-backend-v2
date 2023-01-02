@@ -394,19 +394,20 @@ func InitSocketServer(server *Server) *socketio.Server {
 	})
 
 	// server notification
-	socket.OnEvent("/notification", "join", func(s socketio.Conn, groupID string, token string) {
-		if groupID == "" {
-			s.Emit("error", "group id is required")
-			return
-		}
-
-		err := checkUserInGroup(server, groupID, token)
+	socket.OnEvent("/notification", "join", func(s socketio.Conn, token string) {
+		res, err := server.AuthService.JWT.ValidateToken(token)
 		if err != nil {
-			s.Emit("error", err.Error())
+			s.Emit("error", fmt.Errorf("invalid token: %w", err).Error())
 			return
 		}
-
-		s.Join(groupID)
+		groups, err := server.AuthService.DB.GetGroupByUser(context.Background(), res.UserID)
+		if err != nil {
+			s.Emit("error", fmt.Errorf("get group by user failed: %w", err).Error())
+			return
+		}
+		for _, group := range groups {
+			s.Join(group.GroupID)
+		}
 	})
 
 	return socket

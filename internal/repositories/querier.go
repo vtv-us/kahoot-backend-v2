@@ -37,6 +37,7 @@ type Querier interface {
 	GetAnswerHistory(ctx context.Context, arg GetAnswerHistoryParams) (AnswerHistory, error)
 	GetAnswersByQuestion(ctx context.Context, questionID string) ([]Answer, error)
 	GetGroup(ctx context.Context, groupID string) (Group, error)
+	GetGroupByUser(ctx context.Context, userID string) ([]GetGroupByUserRow, error)
 	GetOwnerOfQuestion(ctx context.Context, id string) (string, error)
 	GetQuestion(ctx context.Context, id string) (Question, error)
 	GetQuestionBySlideAndIndex(ctx context.Context, arg GetQuestionBySlideAndIndexParams) (Question, error)

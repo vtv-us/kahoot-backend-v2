@@ -26,3 +26,11 @@ ORDER BY ug.group_id;
 -- name: DeleteGroup :exec
 DELETE FROM "group"
 WHERE group_id = $1;
+
+-- name: GetGroupByUser :many
+SELECT *
+FROM "group"
+JOIN "user_group" ug using (group_id)
+WHERE ug.user_id = $1
+AND ug.status = 'joined'
+ORDER BY ug.group_id;
