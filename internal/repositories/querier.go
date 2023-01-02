@@ -36,6 +36,7 @@ type Querier interface {
 	GetAnswerByQuestionAndIndex(ctx context.Context, arg GetAnswerByQuestionAndIndexParams) (Answer, error)
 	GetAnswerHistory(ctx context.Context, arg GetAnswerHistoryParams) (AnswerHistory, error)
 	GetAnswersByQuestion(ctx context.Context, questionID string) ([]Answer, error)
+	GetChatBySlide(ctx context.Context, slideID string) ([]ChatMsg, error)
 	GetGroup(ctx context.Context, groupID string) (Group, error)
 	GetGroupByUser(ctx context.Context, userID string) ([]GetGroupByUserRow, error)
 	GetOwnerOfQuestion(ctx context.Context, id string) (string, error)
@@ -62,6 +63,7 @@ type Querier interface {
 	ListUserQuestion(ctx context.Context, slideID string) ([]UserQuestion, error)
 	RemoveCollab(ctx context.Context, arg RemoveCollabParams) error
 	RemoveMemberFromGroup(ctx context.Context, arg RemoveMemberFromGroupParams) error
+	SaveChat(ctx context.Context, arg SaveChatParams) (ChatMsg, error)
 	ToggleUserQuestionAnswered(ctx context.Context, questionID string) (UserQuestion, error)
 	UpdateAnswer(ctx context.Context, arg UpdateAnswerParams) (Answer, error)
 	UpdateAvatarUrl(ctx context.Context, arg UpdateAvatarUrlParams) (User, error)

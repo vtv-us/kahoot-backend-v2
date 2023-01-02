@@ -35,3 +35,7 @@ type AnswerHistory struct {
 type UserQuestion struct {
 	entities.UserQuestion
 }
+
+type ChatMsg struct {
+	entities.ChatMsg
+}

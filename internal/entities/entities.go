@@ -27,6 +27,14 @@ type AnswerHistory struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+type ChatMsg struct {
+	ID        string    `json:"id"`
+	SlideID   string    `json:"slide_id"`
+	Username  string    `json:"username"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Collab struct {
 	UserID    string    `json:"user_id"`
 	SlideID   string    `json:"slide_id"`

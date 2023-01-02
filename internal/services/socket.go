@@ -332,6 +332,10 @@ func InitSocketServer(server *Server) *socketio.Server {
 			Username: username,
 			Message:  msg,
 		})
+		if err := server.SlideService.SaveChatMsg(roomID, username, msg); err != nil {
+			s.Emit("error", fmt.Errorf("save chat message failed: %w", err))
+			return
+		}
 		// send to all participants
 		socket.BroadcastToRoom("/", roomID, "chat", username, msg)
 	})
@@ -339,7 +343,12 @@ func InitSocketServer(server *Server) *socketio.Server {
 	socket.OnEvent("/", "getChatHistory", func(s socketio.Conn) {
 		ctx := s.Context().(*RoomContext)
 		roomID := ctx.RoomID
-		s.Emit("chatHistory", chatRoom[roomID])
+		chatMsgs, err := server.SlideService.GetChatMsgs(roomID)
+		if err != nil {
+			s.Emit("error", fmt.Errorf("get chat history failed: %w", err))
+			return
+		}
+		s.Emit("chatHistory", chatMsgs)
 	})
 
 	// user question
