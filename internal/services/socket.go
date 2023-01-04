@@ -223,9 +223,12 @@ func InitSocketServer(server *Server) *socketio.Server {
 		s.Join(roomID)
 	})
 
-	socket.OnEvent("/", "cancelPresentation", func(s socketio.Conn) {
+	socket.OnEvent("/", "cancelPresentation", func(s socketio.Conn, roomID string) {
+		if _, ok := room[roomID]; !ok {
+			s.Emit("notify", "Room does not active, skip cancel")
+			return
+		}
 		ctx := s.Context().(*RoomContext)
-		roomID := ctx.RoomID
 		username := ctx.Username
 		err := checkTeacherPermission(username, roomID)
 		if err != nil {
