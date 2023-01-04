@@ -237,10 +237,11 @@ func (s *AuthService) ProviderCallback(ctx *gin.Context) {
 		arg := repositories.CreateUserParams{
 			UserID:       uuid.NewString(),
 			Email:        gUser.Email,
-			Name:         gUser.Name,
+			Name:         gUser.Email,
 			Password:     "",
 			Verified:     true,
 			VerifiedCode: verifyCode,
+			AvatarUrl:    gUser.AvatarURL,
 		}
 		provider := ctx.Param("provider")
 		if provider == "google" {

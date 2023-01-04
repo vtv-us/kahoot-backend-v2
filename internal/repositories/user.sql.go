@@ -19,9 +19,10 @@ INSERT INTO "user" (
   verified,
   verified_code,
   google_id,
-  facebook_id
+  facebook_id,
+  avatar_url
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
 RETURNING user_id, email, name, password, verified, verified_code, created_at, google_id, facebook_id, avatar_url
 `
@@ -35,6 +36,7 @@ type CreateUserParams struct {
 	VerifiedCode string         `json:"verified_code"`
 	GoogleID     sql.NullString `json:"google_id"`
 	FacebookID   sql.NullString `json:"facebook_id"`
+	AvatarUrl    string         `json:"avatar_url"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -47,6 +49,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.VerifiedCode,
 		arg.GoogleID,
 		arg.FacebookID,
+		arg.AvatarUrl,
 	)
 	var i User
 	err := row.Scan(
