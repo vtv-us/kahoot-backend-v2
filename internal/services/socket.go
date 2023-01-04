@@ -236,7 +236,7 @@ func InitSocketServer(server *Server) *socketio.Server {
 		delete(roomState, roomID)
 		delete(groupSlidePresent, roomGroup[roomID])
 		delete(roomGroup, roomID)
-		// delete group slide present
+		socket.BroadcastToRoom("/", roomID, "cancelPresentation", roomID)
 	})
 
 	socket.OnEvent("/", "getSlidePresentation", func(s socketio.Conn, groupID string) {
