@@ -108,12 +108,12 @@ func InitSocketServer(server *Server) *socketio.Server {
 			roomState[roomID] = 1
 		}
 		// check if room already has a teacher
-		for _, participant := range room[roomID] {
-			if participant.IsTeacher && participant.Username != username {
-				s.Emit("error", "Room already has a teacher")
-				return
-			}
-		}
+		// for _, participant := range room[roomID] {
+		// 	if participant.IsTeacher && participant.Username != username {
+		// 		s.Emit("error", "Room already has a teacher")
+		// 		return
+		// 	}
+		// }
 
 		exist := checkExistInRoom(username, roomID)
 		if exist {
