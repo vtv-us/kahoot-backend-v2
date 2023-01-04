@@ -88,7 +88,7 @@ func InitRoutes(server *services.Server, socket *socketio.Server, c *utils.Confi
 	answer.PUT("", server.AnswerService.UpdateAnswer)
 	answer.DELETE("/:answer_id", server.AnswerService.DeleteAnswer)
 
-	route.Use(services.GinMiddleware(c.FrontendAddress))
+	route.Use(services.GinMiddleware("http://127.0.0.1:5500"))
 	route.GET("/socket.io/*any", gin.WrapH(socket))
 	route.POST("/socket.io/*any", gin.WrapH(socket))
 	route.GET("/test", func(c *gin.Context) {
