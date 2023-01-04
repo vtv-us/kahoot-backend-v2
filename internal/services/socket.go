@@ -34,6 +34,7 @@ type Room map[string][]Participant
 type IsRoomGroup map[string]bool
 type RoomGroup map[string]string
 type RoomState map[string]int
+type GroupSlidePresent map[string]string
 
 type PresentationNotification struct {
 	SlideID string
@@ -50,6 +51,7 @@ func InitSocketServer(server *Server) *socketio.Server {
 	roomState := make(RoomState)
 	isRoomGroup := make(IsRoomGroup)
 	roomGroup := make(RoomGroup)
+	groupSlidePresent := make(GroupSlidePresent)
 
 	socket.OnConnect("/", func(s socketio.Conn) error {
 		fmt.Println("connected:", s.ID())
@@ -89,7 +91,7 @@ func InitSocketServer(server *Server) *socketio.Server {
 				return
 			}
 			roomGroup[roomID] = groupID
-
+			groupSlidePresent[groupID] = roomID
 			socket.BroadcastToRoom("/notification", groupID, "notify", PresentationNotification{
 				SlideID: roomID,
 				GroupID: groupID,
@@ -102,7 +104,9 @@ func InitSocketServer(server *Server) *socketio.Server {
 		}
 		s.SetContext(ctx)
 		fmt.Println(s.ID(), username, "host:", roomID)
-		roomState[roomID] = 1
+		if _, ok := room[roomID]; !ok {
+			roomState[roomID] = 1
+		}
 		// check if room already has a teacher
 		for _, participant := range room[roomID] {
 			if participant.IsTeacher && participant.Username != username {
@@ -217,6 +221,15 @@ func InitSocketServer(server *Server) *socketio.Server {
 			})
 		}
 		s.Join(roomID)
+	})
+
+	socket.OnEvent("/", "getSlidePresentation", func(s socketio.Conn, groupID string) {
+		_, ok := groupSlidePresent[groupID]
+		if !ok {
+			s.Emit("error", "Group does not have any slide presentation")
+			return
+		}
+		s.Emit("getSlidePresentation", groupSlidePresent[groupID])
 	})
 
 	socket.OnEvent("/", "submitAnswer", func(s socketio.Conn, question string, answer string) {
