@@ -330,6 +330,14 @@ func InitSocketServer(server *Server) *socketio.Server {
 			}
 			if allLeft {
 				delete(room, id)
+				delete(roomState, id)
+				delete(roomGroup, id)
+				// delete group slide present
+				for group := range groupSlidePresent {
+					if group == roomGroup[id] {
+						delete(groupSlidePresent, group)
+					}
+				}
 			}
 		}
 	})
