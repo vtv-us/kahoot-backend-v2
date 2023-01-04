@@ -223,6 +223,22 @@ func InitSocketServer(server *Server) *socketio.Server {
 		s.Join(roomID)
 	})
 
+	socket.OnEvent("/", "cancelPresentation", func(s socketio.Conn) {
+		ctx := s.Context().(*RoomContext)
+		roomID := ctx.RoomID
+		username := ctx.Username
+		err := checkTeacherPermission(username, roomID)
+		if err != nil {
+			s.Emit("error", err.Error())
+			return
+		}
+		delete(room, roomID)
+		delete(roomState, roomID)
+		delete(groupSlidePresent, roomGroup[roomID])
+		delete(roomGroup, roomID)
+		// delete group slide present
+	})
+
 	socket.OnEvent("/", "getSlidePresentation", func(s socketio.Conn, groupID string) {
 		_, ok := groupSlidePresent[groupID]
 		if !ok {
@@ -331,13 +347,8 @@ func InitSocketServer(server *Server) *socketio.Server {
 			if allLeft {
 				delete(room, id)
 				delete(roomState, id)
+				delete(groupSlidePresent, roomGroup[id])
 				delete(roomGroup, id)
-				// delete group slide present
-				for group := range groupSlidePresent {
-					if group == roomGroup[id] {
-						delete(groupSlidePresent, group)
-					}
-				}
 			}
 		}
 	})
